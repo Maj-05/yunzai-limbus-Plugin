@@ -76,7 +76,7 @@ export async function build () {
   // 人格 + EGO 立绘都本地缓存（人格 normal/gacksung，EGO normal）
   const sources = [
     { file: DATA, kinds: ['normal', 'gacksung'], total: 0 },
-    { file: EGO_DATA, kinds: ['awaken_profile', 'corrode_profile'], total: 0 }
+    { file: EGO_DATA, kinds: ['awaken_profile'], total: 0 }
   ]
   let grandTotal = 0
   for (const src of sources) {
