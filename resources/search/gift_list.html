@@ -1,0 +1,29 @@
+{{extend defaultLayout}}
+
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{pluResPath}}search/gift_list.css"/>
+{{/block}}
+
+{{block 'main'}}
+<div class="head-box">
+  <div class="title">镜牢饰品全览</div>
+  <div class="label">共 {{total}} 件 · 按级别分组 · 回复编号或输入名称查详情</div>
+</div>
+
+{{each groups g}}
+<div class="card">
+  <div class="card-title">{{g.lv}}</div>
+  <div class="gl-grid">
+    {{each g.items it i}}
+    <div class="gl-item">
+      <span class="gl-idx">{{i + 1}}</span>
+      <span class="gl-name">{{it.name}}</span>
+      <span class="gl-id">ID {{it.id}}</span>
+    </div>
+    {{/each}}
+  </div>
+</div>
+{{/each}}
+
+<div class="copyright">{{@sys.copyright}}</div>
+{{/block}}

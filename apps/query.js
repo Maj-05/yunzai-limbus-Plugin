@@ -1,7 +1,7 @@
 import db from '../lib/db.mjs'
 import { rulePrefix } from '../utils/common.js'
 import runtimeRender from '../utils/runtimeRender.js'
-import { buildEgoCard, buildEnemyCard, buildGiftCard, buildSinnerEgoList, suggestions } from '../lib/cards.mjs'
+import { buildEgoCard, buildEnemyCard, buildGiftCard, buildGiftList, buildSinnerEgoList, suggestions } from '../lib/cards.mjs'
 import { rememberSelect, peekSelect, clearSelect } from '../lib/selection.mjs'
 
 export class LimbusQuery2 extends plugin {
@@ -15,6 +15,7 @@ export class LimbusQuery2 extends plugin {
         { reg: `^${rulePrefix}(?:ego|EGO|E\\.G\\.O)\\s*(.+)$`, fnc: 'queryEgo' },
         { reg: `^${rulePrefix}(?:敌人|abnormality)\\s*(.+)$`, fnc: 'queryEnemy' },
         { reg: `^${rulePrefix}(?:饰品|egogift|EGO饰品)\\s*(.+)$`, fnc: 'queryGift' },
+        { reg: `^${rulePrefix}(?:饰品|egogift)(?:列表|list|全部)$`, fnc: 'giftList' },
         { reg: '^#?[1-8]$', fnc: 'selectNumber' },
         { reg: `^${rulePrefix}图鉴状态$`, fnc: 'status' }
       ]
@@ -112,6 +113,13 @@ export class LimbusQuery2 extends plugin {
       `人格: ${s.personalities}\nE.G.O: ${s.egos}\n敌人: ${s.enemies}\n饰品: ${s.egogifts}\n` +
       (s.builtAt ? `构建时间: ${s.builtAt}` : '')
     )
+    return true
+  }
+
+  async giftList() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const data = buildGiftList()
+    await runtimeRender(this.e, 'search/gift_list', data, { scale: 1.4 })
     return true
   }
 
