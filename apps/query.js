@@ -25,7 +25,7 @@ export class LimbusQuery2 extends plugin {
     return q
   }
 
-  async _query(kind, q, renderFn, tplPath, hint) {
+  async _query(kind, kindName, kindKey, q, renderFn, tplPath, hint) {
     if (!q) {
       await this.reply(hint)
       return true
@@ -45,9 +45,9 @@ export class LimbusQuery2 extends plugin {
       const isExact = first?.name && first.name.replace(/\s+/g, '') === q.replace(/\s+/g, '')
       if (!isExact) {
         await runtimeRender(this.e, 'search/search', {
-          kind: kind === 'ego' ? 'E.G.O' : kind === 'enemy' ? '敌人' : '饰品',
+          kind: kindName,
           keyword: q,
-          results: suggestions(ids, kind === 'ego' ? 'ego' : kind === 'enemy' ? 'enemy' : 'gift')
+          results: suggestions(ids, kindKey)
         }, { scale: 1.4 })
         return true
       }
@@ -72,6 +72,7 @@ export class LimbusQuery2 extends plugin {
     }
     return this._query(
       { search: db.searchEgo.bind(db), get: db.getEgo.bind(db) },
+      'E.G.O', 'ego',
       q,
       buildEgoCard, 'ego/ego',
       '用法：#ego 名称，例如 #ego 深沉的悲伤'
@@ -80,6 +81,7 @@ export class LimbusQuery2 extends plugin {
   async queryEnemy() {
     return this._query(
       { search: db.searchEnemy.bind(db), get: db.getEnemy.bind(db) },
+      '敌人', 'enemy',
       this._strip(this.e.msg, '敌人|abnormality'),
       buildEnemyCard, 'enemy/enemy',
       '用法：#敌人 名称，例如 #敌人 深红薄暮'
@@ -89,6 +91,7 @@ export class LimbusQuery2 extends plugin {
   async queryGift() {
     return this._query(
       { search: db.searchGift.bind(db), get: db.getGift.bind(db) },
+      '饰品', 'gift',
       this._strip(this.e.msg, '饰品|egogift|EGO饰品'),
       buildGiftCard, 'gift/gift',
       '用法：#饰品 名称，例如 #饰品 万人敌'
