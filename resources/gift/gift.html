@@ -2,14 +2,20 @@
 
 {{block 'css'}}
 <link rel="stylesheet" type="text/css" href="{{pluResPath}}personality/personality.css"/>
+<link rel="stylesheet" type="text/css" href="{{pluResPath}}gift/gift.css"/>
 {{/block}}
 
 {{block 'main'}}
-<div class="head-box">
-  <div class="title">{{card.name}}</div>
-  <div class="label">
-    <span class="badge" style="background:{{card.rarityColor}}">{{card.rarityName}}</span>
-    <span class="badge" style="background:#3a3a52">ID {{card.id}}</span>
+<div class="gift-card-wrap">
+  <div class="gift-rarity" style="background:{{card.rarityColor}}">
+    <span class="gift-tier">{{'◆'.repeat(card.rarityTier)}}</span>
+  </div>
+  <div class="head-box">
+    <div class="title">{{card.name}}</div>
+    <div class="label">
+      <span class="badge" style="background:{{card.rarityColor}}">{{card.rarityName}}</span>
+      <span class="badge" style="background:#3a3a52">ID {{card.id}}</span>
+    </div>
   </div>
 </div>
 
