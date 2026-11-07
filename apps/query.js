@@ -20,7 +20,7 @@ export class LimbusQuery2 extends plugin {
   }
 
   _strip(msg, kw) {
-    let q = msg.replace(/#|\/|边狱|巴士|limbus|Limbus/gi, '').trim()
+    let q = msg.replace(/#|\/|边狱|巴士|084|limbus|Limbus/gi, '').trim()
     q = q.replace(new RegExp(`^${kw}\\s*`, 'i'), '').trim()
     return q
   }

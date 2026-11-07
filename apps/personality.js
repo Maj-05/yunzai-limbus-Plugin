@@ -21,7 +21,7 @@ export class LimbusQuery extends plugin {
   }
 
   async queryPersonality() {
-    const q = this.e.msg.replace(/#|\/|边狱|巴士|limbus|Limbus|人格|身份/g, '').trim()
+    const q = this.e.msg.replace(/#|\/|边狱|巴士|084|limbus|Limbus|人格|身份/g, '').trim()
     if (!q || q === '帮助') return false  // 帮助交给 help.js
     if (!db.load()) {
       await this.reply('图鉴数据未就绪，请联系管理员运行数据构建')

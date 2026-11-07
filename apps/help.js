@@ -88,15 +88,15 @@ export class LimbusHelp extends plugin {
       event: 'message',
       priority: 490,
       rule: [
-        { reg: `^${rulePrefix}limbus帮助$`, fnc: 'help' },
-        { reg: `^${rulePrefix}边狱帮助$`, fnc: 'help' },
-        { reg: `^${rulePrefix}巴士帮助$`, fnc: 'help' },
-        { reg: `^${rulePrefix}图鉴帮助$`, fnc: 'help' },
-        { reg: `^${rulePrefix}(?:084帮助|limbus|Limbus)$`, fnc: 'help' },
-        { reg: `^${rulePrefix}人格帮助$`, fnc: 'helpPersonality' },
-        { reg: `^${rulePrefix}敌人帮助$`, fnc: 'helpEnemy' },
-        { reg: `^${rulePrefix}ego帮助$`, fnc: 'helpEgo' },
-        { reg: `^${rulePrefix}(?:身份|人)帮助$`, fnc: 'helpPersonality' }
+        // 主帮助：带任意前缀或裸 #帮助
+        { reg: '^#(?:边狱|巴士|limbus|Limbus|084)?帮助$', fnc: 'help' },
+        { reg: '^#帮助$', fnc: 'help' },
+        // 分类帮助
+        { reg: '^#(?:边狱|巴士|limbus|Limbus|084)?(?:人格|身份)帮助$', fnc: 'helpPersonality' },
+        { reg: '^#(?:边狱|巴士|limbus|Limbus|084)?敌人帮助$', fnc: 'helpEnemy' },
+        { reg: '^#(?:边狱|巴士|limbus|Limbus|084)?(?:ego|EGO)帮助$', fnc: 'helpEgo' },
+        // 兜底：限时叫 limbus/巴士/084 也弹主帮助
+        { reg: '^#(?:边狱|巴士|limbus|Limbus|084)$', fnc: 'help' }
       ]
     })
   }

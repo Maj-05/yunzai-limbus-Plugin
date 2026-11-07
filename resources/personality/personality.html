@@ -13,7 +13,7 @@
     <div class="label">
       <span class="badge" style="background:{{card.rankColor}}">{{card.rankName}}</span>
       <span class="badge" style="background:#3a3a52">{{card.charName}}</span>
-      <span class="badge" style="background:#3a3a52">赛季{{card.season}}</span>
+      <span class="badge" style="background:#3a3a52">{{card.seasonLabel}}</span>
       <span class="badge" style="background:#3a3a52">ID {{card.id}}</span>
     </div>
   </div>
@@ -24,7 +24,7 @@
   <div class="label">
     <span class="badge" style="background:{{card.rankColor}}">{{card.rankName}}</span>
     <span class="badge" style="background:#3a3a52">{{card.charName}}</span>
-    <span class="badge" style="background:#3a3a52">赛季{{card.season}}</span>
+    <span class="badge" style="background:#3a3a52">{{card.seasonLabel}}</span>
     <span class="badge" style="background:#3a3a52">ID {{card.id}}</span>
   </div>
 </div>
@@ -33,7 +33,9 @@
 <div class="card">
   <div class="card-title">基础数值</div>
   <div class="stat-grid">
-    <div class="stat"><span class="k">生命</span><span class="v">{{card.hp}}</span><span class="s">+{{card.hpInc}}/级</span></div>
+    <div class="stat"><span class="k">生命</span><span class="v">{{card.hp}}</span><span class="s">+{{card.hpInc}}/级</span>
+      {{if card.hpLevels.length}}<span class="lv"><span class="lv-tag">L1 {{card.hpLevels[0].value}}</span><span class="lv-tag">L40 {{card.hpLevels[1].value}}</span><span class="lv-tag">L50 {{card.hpLevels[2].value}}</span></span>{{/if}}
+    </div>
     <div class="stat"><span class="k">防御修正</span><span class="v">{{card.def}}</span></div>
     <div class="stat"><span class="k">速度</span><span class="v">{{card.speed}}</span></div>
   </div>
