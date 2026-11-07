@@ -55,7 +55,8 @@ export class LimbusUpdate extends plugin {
       event: 'message',
       priority: 500,
       rule: [
-        { reg: `^${rulePrefix}limbus更新(数据)?$`, fnc: 'update', permission: 'master' },
+        { reg: `^${rulePrefix}limbus(?:强制)?更新(数据)?$`, fnc: 'update', permission: 'master' },
+        { reg: `^${rulePrefix}limbus强制更新$`, fnc: 'update', permission: 'master' },
         { reg: `^${rulePrefix}limbus版本$`, fnc: 'version' },
         { reg: `^${rulePrefix}图鉴状态$`, fnc: 'status' }
       ]
@@ -108,13 +109,29 @@ export class LimbusUpdate extends plugin {
       if (!onlyData) {
         await this.reply('①/② 正在拉取插件最新代码…')
         if (this._isGitRepo()) {
-          const { stdout } = await execAsync('git pull --ff-only', {
-            cwd: PLUGIN_ROOT, timeout: 120000, windowsHide: true
-          }).catch(err => ({ stdout: '', stderr: err.message }))
-          const pulled = /Already up to date|已经是最新的/i.test(stdout)
-            ? '插件代码已是最新'
-            : `代码已更新:\n${stdout.trim().split('\n').slice(-4).join('\n')}`
-          await this.reply(pulled.slice(0, 400))
+          const isForce = this.e.msg.includes('强制')
+          // 记录更新前 commit，用于展示更新日志
+          const oldCommit = await this._execGit('rev-parse --short HEAD')
+          let cmd = isForce
+            ? 'git -C "' + PLUGIN_ROOT + '" fetch --all && git -C "' + PLUGIN_ROOT + '" reset --hard HEAD'
+            : 'git -C "' + PLUGIN_ROOT + '" pull --no-rebase'
+          let ret = await execAsync(cmd, { timeout: 180000, windowsHide: true }).catch(err => ({ stdout: '', stderr: err.message }))
+          // 直连失败则走 ghMirror 代理重试
+          if (/Failed to connect|unable to access|Timed out|Could not/i.test(ret.stdout || '') + String(ret.stderr || '')) {
+            const mir = ghMirrorOf(REPO_URL)
+            await this.reply('直连 GitHub 失败，改用代理镜像重试…')
+            ret = await execAsync(`git -C "${PLUGIN_ROOT}" pull --no-rebase "${mir}" HEAD`, { timeout: 180000, windowsHide: true })
+              .catch(err => ({ stdout: '', stderr: err.message }))
+          }
+          const stdout = (ret.stdout || '') + (ret.stderr || '')
+          if (/Already up.to date|已经是最新/i.test(stdout)) {
+            await this.reply('插件代码已是最新')
+          } else {
+            await this.reply(`代码已更新（${isForce ? '强制' : '常规'}）\n${stdout.trim().split('\n').slice(-6).join('\n').slice(0, 400)}`)
+            // 显示更新日志
+            const log = await this._gitLog(oldCommit)
+            if (log) await this.reply(log.slice(0, 600))
+          }
         } else {
           // 第三方面板安装（无 .git）：用 git 临时 clone 拉取最新代码覆盖（保留 data/upstream 与 resources/art）
           try {
@@ -200,5 +217,26 @@ export class LimbusUpdate extends plugin {
       this._running = false
     }
     return true
+  }
+
+  _execGit (args) {
+    return execAsync(`git -C "${PLUGIN_ROOT}" ${args}`, { timeout: 60000, windowsHide: true })
+      .then(r => (r.stdout || '').trim()).catch(() => '')
+  }
+
+  _gitLog (oldCommit) {
+    return this._execGit('log -15 --oneline --pretty=format:"%h|[%cd] %s" --date=format:"%m-%d %H:%M"')
+      .then(out => {
+        if (!out) return ''
+        const lines = out.split('\n')
+        const logs = []
+        for (const l of lines) {
+          const h = (l.split('|')[0] || '').trim()
+          if (h && oldCommit && h === oldCommit) break
+          if (/Merge branch/.test(l)) continue
+          logs.push(l)
+        }
+        return logs.length ? `最近更新:\n${logs.join('\n')}` : ''
+      }).catch(() => '')
   }
 }
