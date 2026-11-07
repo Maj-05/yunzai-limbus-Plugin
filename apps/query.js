@@ -15,7 +15,7 @@ export class LimbusQuery2 extends plugin {
         { reg: `^${rulePrefix}(?:ego|EGO|E\\.G\\.O)\\s*(.+)$`, fnc: 'queryEgo' },
         { reg: `^${rulePrefix}(?:敌人|abnormality)\\s*(.+)$`, fnc: 'queryEnemy' },
         { reg: `^${rulePrefix}(?:饰品|egogift|EGO饰品)\\s*(.+)$`, fnc: 'queryGift' },
-        { reg: `^${rulePrefix}(?:饰品|egogift)(?:列表|list|全部)$`, fnc: 'giftList' },
+        { reg: `^${rulePrefix}(?:饰品|egogift)(?:列表|list|全部)\s*(\\d{0,2})$`, fnc: 'giftList' },
         { reg: '^#?[1-8]$', fnc: 'selectNumber' },
         { reg: `^${rulePrefix}图鉴状态$`, fnc: 'status' }
       ]
@@ -118,7 +118,10 @@ export class LimbusQuery2 extends plugin {
 
   async giftList() {
     if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
-    const data = buildGiftList()
+    // #饰品列表 2 → 只显示级别2
+    const m = this.e.msg.match(/(\d{1,2})\s*$/)
+    const level = m ? Number(m[1]) : null
+    const data = buildGiftList(level)
     await runtimeRender(this.e, 'search/gift_list', data, { scale: 1.4 })
     return true
   }
