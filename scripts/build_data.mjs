@@ -102,9 +102,18 @@ export async function buildAll (upstreamDir, outDir) {
       if (defId) defense = { skillId: defId, type: null, sin: null }
       // 被动：battlePassive（战斗中）+ supporterPassive（支援/主线加成）
       const pvOfPers = passiveByPers.get(s.id) || { battle: [], supporter: [] }
+      // 被动去重：上游 battle/supporter 列表可能重复（同一 id 多次），只保留一次
       const passives = []
-      for (const pid of pvOfPers.battle) passives.push({ id: pid, on: true, res: 0 })
-      for (const pid of pvOfPers.supporter) passives.push({ id: pid, on: false, res: 0 })
+      const pvSeen = new Set()
+      const addPv = (pid, on) => {
+        if (pid == null) return
+        const k = `${pid}|${on}`
+        if (pvSeen.has(k)) return
+        pvSeen.add(k)
+        passives.push({ id: pid, on, res: 0 })
+      }
+      for (const pid of pvOfPers.battle) addPv(pid, true)
+      for (const pid of pvOfPers.supporter) addPv(pid, false)
       personalities.push({
         id: s.id,
         name,
