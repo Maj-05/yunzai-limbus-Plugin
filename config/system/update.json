@@ -1,4 +1,11 @@
 {
   "ghMirror": "",
-  "note": "GitHub 代理前缀。若服务器无法直连 github.com（国内常见），可填如 https://ghfast.top/ 或 https://ghproxy.com/ （注意以 / 结尾）。留空则直连。"
+  "note": "GitHub 代理前缀。若服务器无法直连 github.com（国内常见），可填镜像地址（以 / 结尾），如 https://ghfast.top/ 或 https://ghproxy.net/。留空则直连。",
+  "example": {
+    "ghMirror": "https://ghfast.top/",
+    "upstreams": {
+      "LocalizeLimbusCompany": "https://ghfast.top/https://github.com/LocalizeLimbusCompany/LocalizeLimbusCompany.git"
+    }
+  },
+  "tip": "配好 ghMirror 后执行 #limbus更新，会重新拉取 LocalizeLimbusCompany 中文文本源并重建数据，即可补齐显示为 技能{id} 等缺失的技能/被动描述。"
 }
