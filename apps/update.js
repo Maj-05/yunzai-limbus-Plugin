@@ -14,10 +14,38 @@ const execAsync = promisify(exec)
  *  #图鉴状态          → 数据统计
  */
 const REPO_URL = 'https://github.com/Maj-05/yunzai-limbus-dive.git'
-const UPSTREAMS = [
-  { name: 'LimbusStaticData', url: 'https://git.neonteam.dev/yuvlian/LimbusStaticData.git' },
-  { name: 'LocalizeLimbusCompany', url: 'https://github.com/LocalizeLimbusCompany/LocalizeLimbusCompany.git' }
+// 上游数据源（可在 config/system/update.json 覆盖 url / 设置 ghMirror 走 GitHub 代理）
+const DEFAULT_UPSTREAMS = [
+  { name: 'LimbusStaticData', url: 'https://git.neonteam.dev/yuvlian/LimbusStaticData.git', gh: false },
+  { name: 'LocalizeLimbusCompany', url: 'https://github.com/LocalizeLimbusCompany/LocalizeLimbusCompany.git', gh: true }
 ]
+
+function loadUpdateConfig () {
+  try {
+    const p = path.join(PLUGIN_ROOT, 'config', 'system', 'update.json')
+    if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8'))
+  } catch (e) { logger.error('[limbus-dive] 读取 update.json 失败: ' + e.message) }
+  return {}
+}
+
+function ghMirrorOf (url) {
+  const cfg = loadUpdateConfig()
+  const mirror = (cfg.ghMirror || '').replace(/\/$/, '') + '/'
+  return (mirror && mirror !== '/') ? mirror + url : url
+}
+
+function getUpstreams () {
+  const cfg = loadUpdateConfig()
+  const mirror = (cfg.ghMirror || '').replace(/\/$/, '') + '/'
+  return DEFAULT_UPSTREAMS.map(u => {
+    let url = u.url
+    if (u.gh && mirror && mirror !== '/') url = mirror + url
+    // 允许在配置里单独覆盖某个源
+    const over = (cfg.upstreams || {})[u.name]
+    if (over) url = over
+    return { name: u.name, url }
+  })
+}
 
 export class LimbusUpdate extends plugin {
   constructor() {
@@ -92,7 +120,7 @@ export class LimbusUpdate extends plugin {
           try {
             const tmp = path.join(PLUGIN_ROOT, '..', `.limbus-update-${Date.now()}`)
             fs.rmSync(tmp, { recursive: true, force: true })
-            await execAsync(`git clone --depth 1 ${REPO_URL} "${tmp}"`, { timeout: 300000, windowsHide: true })
+            await execAsync(`git clone --depth 1 ${ghMirrorOf(REPO_URL)} "${tmp}"`, { timeout: 300000, windowsHide: true })
             // 复制代码文件（保留本地的 data/upstream、resources/art、node_modules）
             for (const item of fs.readdirSync(tmp)) {
               if (['data', 'resources', 'node_modules', '.git'].includes(item)) continue
@@ -125,7 +153,7 @@ export class LimbusUpdate extends plugin {
       const upstreamDir = path.join(PLUGIN_ROOT, 'data', 'upstream')
       fs.mkdirSync(upstreamDir, { recursive: true })
       await this.reply('②/② 正在拉取上游数据源（1-3 分钟）…')
-      for (const u of UPSTREAMS) {
+      for (const u of getUpstreams()) {
         const dest = path.join(upstreamDir, u.name)
         try {
           if (fs.existsSync(path.join(dest, '.git'))) {

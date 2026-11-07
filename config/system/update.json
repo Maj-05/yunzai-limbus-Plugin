@@ -1,0 +1,4 @@
+{
+  "ghMirror": "",
+  "note": "GitHub 代理前缀。若服务器无法直连 github.com（国内常见），可填如 https://ghfast.top/ 或 https://ghproxy.com/ （注意以 / 结尾）。留空则直连。"
+}
