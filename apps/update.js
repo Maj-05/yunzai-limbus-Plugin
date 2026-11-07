@@ -13,6 +13,7 @@ const execAsync = promisify(exec)
  *  #limbus更新数据    → 仅重建图鉴数据（需要 data/upstream 已存在）
  *  #图鉴状态          → 数据统计
  */
+const REPO_URL = 'https://github.com/Maj-05/yunzai-limbus-dive.git'
 const UPSTREAMS = [
   { name: 'LimbusStaticData', url: 'https://git.neonteam.dev/yuvlian/LimbusStaticData.git' },
   { name: 'LocalizeLimbusCompany', url: 'https://github.com/LocalizeLimbusCompany/LocalizeLimbusCompany.git' }
@@ -77,8 +78,8 @@ export class LimbusUpdate extends plugin {
     try {
       // ============ 阶段1：插件自更新（git pull）============
       if (!onlyData) {
+        await this.reply('①/② 正在拉取插件最新代码…')
         if (this._isGitRepo()) {
-          await this.reply('①/② 正在拉取插件最新代码…')
           const { stdout } = await execAsync('git pull --ff-only', {
             cwd: PLUGIN_ROOT, timeout: 120000, windowsHide: true
           }).catch(err => ({ stdout: '', stderr: err.message }))
@@ -87,7 +88,34 @@ export class LimbusUpdate extends plugin {
             : `代码已更新:\n${stdout.trim().split('\n').slice(-4).join('\n')}`
           await this.reply(pulled.slice(0, 400))
         } else {
-          await this.reply('①/② 插件目录不是 git 仓库（第三方面板安装），跳过自更新。\n提示: 想要自更新请用 git clone 安装:\ngit clone https://github.com/Maj-05/yunzai-limbus-dive plugins/yunzai-limbus-dive')
+          // 第三方面板安装（无 .git）：用 git 临时 clone 拉取最新代码覆盖（保留 data/upstream 与 resources/art）
+          try {
+            const tmp = path.join(PLUGIN_ROOT, '..', `.limbus-update-${Date.now()}`)
+            fs.rmSync(tmp, { recursive: true, force: true })
+            await execAsync(`git clone --depth 1 ${REPO_URL} "${tmp}"`, { timeout: 300000, windowsHide: true })
+            // 复制代码文件（保留本地的 data/upstream、resources/art、node_modules）
+            for (const item of fs.readdirSync(tmp)) {
+              if (['data', 'resources', 'node_modules', '.git'].includes(item)) continue
+              const src = path.join(tmp, item)
+              const dst = path.join(PLUGIN_ROOT, item)
+              fs.rmSync(dst, { recursive: true, force: true })
+              fs.cpSync(src, dst, { recursive: true })
+            }
+            // resources 下只覆盖代码/模板，保留 art 缓存
+            for (const sub of ['common', 'personality', 'ego', 'enemy', 'gift', 'search', 'help', 'data']) {
+              const rsrc = path.join(PLUGIN_ROOT, 'resources', sub)
+              const rtmp = path.join(tmp, 'resources', sub)
+              if (fs.existsSync(rtmp)) {
+                fs.rmSync(rsrc, { recursive: true, force: true })
+                fs.cpSync(rtmp, rsrc, { recursive: true })
+              }
+            }
+            fs.rmSync(tmp, { recursive: true, force: true })
+            await this.reply('代码已更新（面板安装模式：拉取最新代码覆盖完成）')
+          } catch (e) {
+            logger.error(`[limbus-dive] 面板自更新失败: ${e.message}`)
+            await this.reply(`⚠ 面板自更新失败: ${e.message.slice(0, 40)}\n不影响数据更新`)
+          }
         }
       } else {
         await this.reply('①/② 跳过插件自更新（仅更新数据）')
@@ -123,10 +151,10 @@ export class LimbusUpdate extends plugin {
       let artLine = ''
       if (!onlyData) {
         try {
-          await this.reply('正在拉取人格立绘（首次约几分钟，之后增量）…')
+          await this.reply('正在拉取人格+E.G.O 立绘（首次约几分钟，之后增量）…')
           const { build: buildArt } = await import('../scripts/fetch_art.mjs')
           const art = await buildArt()
-          artLine = `\n立绘: 下载 ${art.downloaded} / 已有 ${result.personalities * 2 - art.downloaded - art.failed} / 失败 ${art.failed}`
+          artLine = `\n立绘: 下载 ${art.downloaded} / 已有 ${result.personalities * 2 + result.egos - art.downloaded - art.failed} / 失败 ${art.failed}`
         } catch (e) {
           logger.error(`[limbus-dive] 立绘拉取失败: ${e.message}`)
           artLine = '\n立绘: 拉取失败（不影响文字查询）'

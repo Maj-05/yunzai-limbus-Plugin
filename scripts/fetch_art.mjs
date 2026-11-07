@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PLUGIN_ROOT = path.resolve(__dirname, '..')
 const DATA = path.join(PLUGIN_ROOT, 'resources', 'data', 'personalities.json')
+const EGO_DATA = path.join(PLUGIN_ROOT, 'resources', 'data', 'egos.json')
 const OUT_DIR = path.join(PLUGIN_ROOT, 'resources', 'art')
 const INDEX = path.join(OUT_DIR, 'art_index.json')
 
@@ -65,11 +66,6 @@ function download (url, timeout = 20000, retries = 2) {
 }
 
 export async function build () {
-  if (!fs.existsSync(DATA)) {
-    console.log('[art] 无 personalities.json，跳过')
-    return { downloaded: 0, failed: 0 }
-  }
-  const list = JSON.parse(fs.readFileSync(DATA, 'utf8'))
   fs.mkdirSync(OUT_DIR, { recursive: true })
   const index = {}
   let downloaded = 0
@@ -77,30 +73,43 @@ export async function build () {
   let existed = 0
   const t0 = Date.now()
 
-  for (const p of list) {
-    const id = p.id
-    for (const kind of ['normal', 'gacksung']) {
-      const fn = `${id}_${kind}.png`
-      const target = path.join(OUT_DIR, `${id}_${kind}.png`)
-      if (fs.existsSync(target) && fs.statSync(target).size > 5000) {
-        index[`${id}_${kind}`] = `${id}_${kind}.png`
-        existed++
-        continue
+  // 人格 + EGO 立绘都本地缓存（人格 normal/gacksung，EGO normal）
+  const sources = [
+    { file: DATA, kinds: ['normal', 'gacksung'], total: 0 },
+    { file: EGO_DATA, kinds: ['normal'], total: 0 }
+  ]
+  let grandTotal = 0
+  for (const src of sources) {
+    if (!fs.existsSync(src.file)) continue
+    const list = JSON.parse(fs.readFileSync(src.file, 'utf8'))
+    src.total = list.length * src.kinds.length
+    grandTotal += src.total
+    for (const p of list) {
+      const id = p.id
+      for (const kind of src.kinds) {
+        const fn = `${id}_${kind}.png`
+        const target = path.join(OUT_DIR, `${id}_${kind}.png`)
+        if (fs.existsSync(target) && fs.statSync(target).size > 5000) {
+          index[`${id}_${kind}`] = `${id}_${kind}.png`
+          existed++
+          continue
+        }
+        const url = `https://${HOST}${BASE}/${md5Path(fn)}`
+        try {
+          const buf = await download(url)
+          if (buf.length < 5000) throw new Error('too-small')
+          fs.writeFileSync(target, buf)
+          index[`${id}_${kind}`] = `${id}_${kind}.png`
+          downloaded++
+        } catch (e) {
+          failed++
+          if (kind === 'normal' && src.file === EGO_DATA) console.log(`[art] EGO ${id} normal 缺失: ${e.message}`)
+          else if (kind === 'normal') console.log(`[art] ${id} normal 缺失: ${e.message}`)
+        }
       }
-      const url = `https://${HOST}${BASE}/${md5Path(fn)}`
-      try {
-        const buf = await download(url)
-        if (buf.length < 5000) throw new Error('too-small')
-        fs.writeFileSync(target, buf)
-        index[`${id}_${kind}`] = `${id}_${kind}.png`
-        downloaded++
-      } catch (e) {
-        failed++
-        if (kind === 'normal') console.log(`[art] ${id} normal 缺失: ${e.message}`)
+      if (grandTotal > 40 && (downloaded + failed) % 25 === 0) {
+        console.log(`[art] 进度 ${downloaded + failed}/${grandTotal}`)
       }
-    }
-    if (list.length > 40 && (downloaded + failed) % 20 === 0) {
-      console.log(`[art] 进度 ${downloaded + failed}/${list.length * 2}`)
     }
   }
 
