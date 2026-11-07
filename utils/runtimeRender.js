@@ -1,5 +1,6 @@
 import path from 'path'
 import { Version } from '../components/index.js'
+import { PLUGIN_ROOT } from '../lib/constants.mjs'
 
 const PLUGIN_Name = 'limbus-plugin'
 
@@ -13,7 +14,8 @@ export default function runtimeRender (e, tplPath, renderData = {}, cfg = {}) {
   }
   const scale = (cfg.scale || 1) * 1
   const pct = `style='transform:scale(${scale})'`
-  const layoutPath = path.join(process.cwd(), 'plugins', PLUGIN_Name, 'resources', 'common', 'layout')
+  // 用插件真实根目录解析 layout，避免插件目录名与 PLUGIN_Name 不一致时找不到模板
+  const layoutPath = path.join(PLUGIN_ROOT, 'resources', 'common', 'layout')
 
   return e.runtime.render(PLUGIN_Name, tplPath, renderData, {
     ...cfg,

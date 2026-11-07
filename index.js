@@ -1,6 +1,11 @@
 import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const files = fs.readdirSync('./plugins/limbus-plugin/apps').filter(f => f.endsWith('.js'))
+// 从插件自身目录加载 apps，不依赖插件目录名
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const appsDir = path.join(__dirname, 'apps')
+const files = fs.readdirSync(appsDir).filter(f => f.endsWith('.js'))
 
 logger.info('-------------------------')
 logger.info('limbus-plugin 载入成功!')
