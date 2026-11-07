@@ -2,6 +2,7 @@ import db from '../lib/db.mjs'
 import { rulePrefix } from '../utils/common.js'
 import runtimeRender from '../utils/runtimeRender.js'
 import { buildEgoCard, buildEnemyCard, buildGiftCard, buildSinnerEgoList, suggestions } from '../lib/cards.mjs'
+import { rememberSelect, peekSelect, clearSelect } from '../lib/selection.mjs'
 
 export class LimbusQuery2 extends plugin {
   constructor() {
@@ -14,6 +15,7 @@ export class LimbusQuery2 extends plugin {
         { reg: `^${rulePrefix}(?:ego|EGO|E\\.G\\.O)\\s*(.+)$`, fnc: 'queryEgo' },
         { reg: `^${rulePrefix}(?:敌人|abnormality)\\s*(.+)$`, fnc: 'queryEnemy' },
         { reg: `^${rulePrefix}(?:饰品|egogift|EGO饰品)\\s*(.+)$`, fnc: 'queryGift' },
+        { reg: '^#?[1-8]$', fnc: 'selectNumber' },
         { reg: `^${rulePrefix}图鉴状态$`, fnc: 'status' }
       ]
     })
@@ -44,6 +46,7 @@ export class LimbusQuery2 extends plugin {
       const first = kind.get(ids[0])
       const isExact = first?.name && first.name.replace(/\s+/g, '') === q.replace(/\s+/g, '')
       if (!isExact) {
+        rememberSelect(this.e.user_id, { ids, kindName, render: renderFn, tpl: tplPath })
         await runtimeRender(this.e, 'search/search', {
           kind: kindName,
           keyword: q,
@@ -109,6 +112,22 @@ export class LimbusQuery2 extends plugin {
       `人格: ${s.personalities}\nE.G.O: ${s.egos}\n敌人: ${s.enemies}\n饰品: ${s.egogifts}\n` +
       (s.builtAt ? `构建时间: ${s.builtAt}` : '')
     )
+    return true
+  }
+
+  async selectNumber() {
+    const q = this.e.msg.replace(/#/g, '').trim()
+    const n = parseInt(q, 10)
+    if (!Number.isInteger(n) || n < 1) return false
+    const sel = peekSelect(this.e.user_id)
+    if (!sel) return false
+    if (!db.load()) return false
+    const id = sel.ids[n - 1]
+    if (id == null) { await this.reply('序号超出范围（1-' + sel.ids.length + '）'); return true }
+    const card = sel.render(id)
+    if (!card) { await this.reply('数据缺失，请联系管理员更新图鉴'); clearSelect(this.e.user_id); return true }
+    clearSelect(this.e.user_id)
+    await runtimeRender(this.e, sel.tpl, { card }, { scale: 1.4 })
     return true
   }
 }
