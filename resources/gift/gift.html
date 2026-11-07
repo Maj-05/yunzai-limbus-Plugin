@@ -1,0 +1,27 @@
+{{extend defaultLayout}}
+
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{pluResPath}}personality/personality.css"/>
+{{/block}}
+
+{{block 'main'}}
+<div class="head-box">
+  <div class="title">{{card.name}}</div>
+  <div class="label">
+    <span class="badge" style="background:{{card.rarityColor}}">{{card.rarityName}}</span>
+    <span class="badge" style="background:#3a3a52">ID {{card.id}}</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">效果</div>
+  {{each card.effects ef}}
+  <div class="skill-desc" style="margin-bottom:6px">{{ef.text}}</div>
+  {{/each}}
+  {{if !card.effects.length && card.desc}}
+  <div class="skill-desc">{{card.desc}}</div>
+  {{/if}}
+</div>
+
+<div class="copyright">{{@sys.copyright}}</div>
+{{/block}}

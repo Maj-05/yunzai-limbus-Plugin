@@ -1,0 +1,57 @@
+{{extend defaultLayout}}
+
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{pluResPath}}personality/personality.css"/>
+{{/block}}
+
+{{block 'main'}}
+<div class="head-box">
+  <div class="title">{{card.name}}</div>
+  <div class="label">
+    <span class="badge" style="background:{{card.gradeColor}}">{{card.gradeName}}</span>
+    <span class="badge" style="background:#3a3a52">{{card.charName}}</span>
+    <span class="badge" style="background:#3a3a52">赛季{{card.season}}</span>
+    <span class="badge" style="background:#3a3a52">ID {{card.id}}</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">费用与抗性</div>
+  <div class="resist-row" style="margin-bottom:10px">
+    {{each card.cost c}}
+    <div class="resist normal">
+      <span class="rt">{{c.sin}}</span><span class="rv">×{{c.num}}</span>
+    </div>
+    {{/each}}
+  </div>
+  <div class="resist-row">
+    {{each card.resist r}}
+    <div class="resist {{r.cls}}">
+      <span class="rt">{{r.sin}}</span><span class="rv">×{{r.value}}</span>
+    </div>
+    {{/each}}
+  </div>
+</div>
+
+{{if card.awaken}}
+<div class="card">
+  <div class="card-title">觉醒</div>
+  <div class="skill">
+    <div class="skill-head"><span class="skill-name">{{card.awaken.name}}</span></div>
+    <div class="skill-desc">{{card.awaken.desc}}</div>
+  </div>
+</div>
+{{/if}}
+
+{{if card.corrode}}
+<div class="card">
+  <div class="card-title" style="color:#e07a7a">侵蚀</div>
+  <div class="skill">
+    <div class="skill-head"><span class="skill-name">{{card.corrode.name}}</span></div>
+    <div class="skill-desc">{{card.corrode.desc}}</div>
+  </div>
+</div>
+{{/if}}
+
+<div class="copyright">{{@sys.copyright}}</div>
+{{/block}}

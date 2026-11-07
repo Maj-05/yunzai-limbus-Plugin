@@ -1,0 +1,24 @@
+{{extend defaultLayout}}
+
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{pluResPath}}search/search.css"/>
+{{/block}}
+
+{{block 'main'}}
+<div class="head-box">
+  <div class="title">「{{keyword}}」的搜索结果</div>
+  <div class="label">找到 {{results.length}} 条 {{kind}} 记录 · 请使用更精确的名称</div>
+</div>
+
+<div class="card">
+  {{each results r i}}
+  <div class="row">
+    <span class="idx">{{i+1}}</span>
+    <span class="name">{{r.name}}</span>
+    <span class="rid">ID {{r.id}}</span>
+  </div>
+  {{/each}}
+</div>
+
+<div class="copyright">{{@sys.copyright}}</div>
+{{/block}}

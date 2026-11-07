@@ -1,0 +1,89 @@
+{{extend defaultLayout}}
+
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{pluResPath}}personality/personality.css"/>
+{{/block}}
+
+{{block 'main'}}
+{{if card.showArt}}
+<div class="art-banner">
+  <img class="art-img" src="{{pluResPath}}art/{{card.art.normal}}" onerror="this.onerror=null;this.style.display='none';" />
+  <div class="art-overlay">
+    <div class="title">{{card.name}}</div>
+    <div class="label">
+      <span class="badge" style="background:{{card.rankColor}}">{{card.rankName}}</span>
+      <span class="badge" style="background:#3a3a52">{{card.charName}}</span>
+      <span class="badge" style="background:#3a3a52">赛季{{card.season}}</span>
+      <span class="badge" style="background:#3a3a52">ID {{card.id}}</span>
+    </div>
+  </div>
+</div>
+{{else}}
+<div class="head-box">
+  <div class="title">{{card.name}}</div>
+  <div class="label">
+    <span class="badge" style="background:{{card.rankColor}}">{{card.rankName}}</span>
+    <span class="badge" style="background:#3a3a52">{{card.charName}}</span>
+    <span class="badge" style="background:#3a3a52">赛季{{card.season}}</span>
+    <span class="badge" style="background:#3a3a52">ID {{card.id}}</span>
+  </div>
+</div>
+{{/if}}
+
+<div class="card">
+  <div class="card-title">基础数值</div>
+  <div class="stat-grid">
+    <div class="stat"><span class="k">生命</span><span class="v">{{card.hp}}</span><span class="s">+{{card.hpInc}}/级</span></div>
+    <div class="stat"><span class="k">防御修正</span><span class="v">{{card.def}}</span></div>
+    <div class="stat"><span class="k">速度</span><span class="v">{{card.speed}}</span></div>
+  </div>
+  <div class="resist-row">
+    {{each card.resist r}}
+    <div class="resist {{r.cls}}">
+      <span class="rt">{{r.type}}</span><span class="rv">×{{r.value}}</span>
+    </div>
+    {{/each}}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">战斗技能</div>
+  {{each card.skills s}}
+  <div class="skill">
+    <div class="skill-head">
+      <span class="slot">{{s.slot}}技能</span>
+      <span class="badge" style="background:{{s.sinColor}}">{{s.sinName}}</span>
+      <span class="badge" style="background:#3a3a52">{{s.atkName}}</span>
+      <span class="skill-name">{{s.name}}</span>
+      <span class="skill-nums">威力{{s.power}} · 基础{{s.base}} · 币数{{s.coin}}</span>
+    </div>
+    <div class="skill-desc">{{s.desc}}</div>
+  </div>
+  {{/each}}
+  {{if card.defense}}
+  <div class="skill">
+    <div class="skill-head">
+      <span class="slot">守备</span>
+      <span class="badge" style="background:{{card.defense.sinColor}}">{{card.defense.sin}}</span>
+      <span class="badge" style="background:#3a3a52">{{card.defense.type}}</span>
+      <span class="skill-name">{{card.defense.name}}</span>
+    </div>
+    <div class="skill-desc">{{card.defense.desc}}</div>
+  </div>
+  {{/if}}
+</div>
+
+{{if card.passives.length}}
+<div class="card">
+  <div class="card-title">被动</div>
+  {{each card.passives p}}
+  <div class="passive">
+    <div class="p-head"><span class="badge" style="background:#5a5a7a">{{p.on}}</span><span class="skill-name">{{p.name}}</span></div>
+    <div class="skill-desc">{{p.desc}}</div>
+  </div>
+  {{/each}}
+</div>
+{{/if}}
+
+<div class="copyright">{{@sys.copyright}}</div>
+{{/block}}

@@ -1,0 +1,28 @@
+{{extend defaultLayout}}
+
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{pluResPath}}help/index.css"/>
+{{/block}}
+
+{{block 'main'}}
+<div class="head-box">
+  <div class="title">{{helpCfg.title}}</div>
+  <div class="label">{{helpCfg.subTitle}}</div>
+</div>
+
+{{each helpGroup group}}
+<div class="cont-box">
+  <div class="help-group">{{group.group}}</div>
+  <div class="help-table">
+    {{each group.list help}}
+    <div class="td">
+      <strong class="help-title">{{help.title}}</strong>
+      <span class="help-desc">{{help.desc}}</span>
+    </div>
+    {{/each}}
+  </div>
+</div>
+{{/each}}
+
+<div class="copyright">{{@sys.copyright}}</div>
+{{/block}}

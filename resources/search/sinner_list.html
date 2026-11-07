@@ -1,0 +1,38 @@
+{{extend defaultLayout}}
+
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{pluResPath}}search/sinner_list.css"/>
+{{/block}}
+
+{{block 'main'}}
+<div class="head-box">
+  <div class="title">{{charName}} · 全部{{kind}}</div>
+  <div class="label">共 {{total}} 条 · 点击对应的 ID 或名称查询详情</div>
+</div>
+
+<div class="s-grid">
+  {{each items it}}
+  <div class="s-card">
+    {{if it.artLocal}}
+    <img class="s-art" src="{{pluResPath}}art/{{it.art}}" onerror="this.onerror=null;this.style.display='none';" loading="lazy"/>
+    {{else}}
+    <div class="s-art s-art-ph">{{it.rankName}}</div>
+    {{/if}}
+    <div class="s-body">
+      <div class="s-name">{{it.name}}</div>
+      <div class="s-meta">
+        <span class="s-badge" style="background:{{it.rankColor}}">{{it.rankName}}</span>
+        {{if kind === '人格'}}
+        <span class="s-badge s-dark">赛季{{it.season}}</span>
+        {{else}}
+        <span class="s-badge" style="background:{{it.gradeColor}}">{{it.gradeName}}</span>
+        {{/if}}
+        <span class="s-id">ID {{it.id}}</span>
+      </div>
+    </div>
+  </div>
+  {{/each}}
+</div>
+
+<div class="copyright">{{@sys.copyright}}</div>
+{{/block}}

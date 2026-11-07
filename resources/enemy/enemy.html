@@ -1,0 +1,49 @@
+{{extend defaultLayout}}
+
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{pluResPath}}personality/personality.css"/>
+{{/block}}
+
+{{block 'main'}}
+<div class="head-box">
+  <div class="title">{{card.name}}</div>
+  <div class="label"><span class="badge" style="background:#3a3a52">ID {{card.id}}</span></div>
+</div>
+
+{{if card.resist.length}}
+<div class="card">
+  <div class="card-title">抗性</div>
+  <div class="resist-row">
+    {{each card.resist r}}
+    <div class="resist {{r.cls}}">
+      <span class="rt">{{r.type}}</span><span class="rv">×{{r.value}}</span>
+    </div>
+    {{/each}}
+  </div>
+</div>
+{{/if}}
+
+{{if card.skills.length}}
+<div class="card">
+  <div class="card-title">技能</div>
+  {{each card.skills s}}
+  <div class="skill">
+    <div class="skill-head">
+      <span class="badge" style="background:{{s.sinColor}}">{{s.sin}}</span>
+      <span class="skill-name">{{s.name}}</span>
+    </div>
+    <div class="skill-desc">{{s.desc}}</div>
+  </div>
+  {{/each}}
+</div>
+{{/if}}
+
+{{if card.desc}}
+<div class="card">
+  <div class="card-title">描述</div>
+  <div class="skill-desc">{{card.desc}}</div>
+</div>
+{{/if}}
+
+<div class="copyright">{{@sys.copyright}}</div>
+{{/block}}

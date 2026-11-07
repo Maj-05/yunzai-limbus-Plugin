@@ -1,0 +1,16 @@
+{
+  "name": "yunzai-limbus-dive",
+  "version": "1.1.2",
+  "description": "Yunzai (TRSS/Miao) 插件 · 边狱巴士 Limbus Company 图鉴百科：人格/E.G.O/敌人/饰品 离线查询、模糊搜索、灰机wiki立绘热链 —— 数值来自社区静态数据，文本来自 LLC 中文化包",
+  "type": "module",
+  "main": "index.js",
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Maj-05/yunzai-limbus-dive.git"
+  },
+  "author": "Maj-05",
+  "license": "MIT"
+}
