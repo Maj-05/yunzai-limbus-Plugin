@@ -14,8 +14,7 @@ export class LimbusQuery extends plugin {
       event: 'message',
       priority: 500,
       rule: [
-        { reg: `^${rulePrefix}(?:人格|身份)\\s*(.+)$`, fnc: 'queryPersonality' },
-        { reg: `^${rulePrefix}limbus帮助$`, fnc: 'help' }
+        { reg: `^${rulePrefix}(?:人格|身份)\\s*(.+)$`, fnc: 'queryPersonality' }
       ]
     })
   }
@@ -66,8 +65,4 @@ export class LimbusQuery extends plugin {
     return true
   }
 
-  async help() {
-    // 交给 help.js 处理
-    return false
-  }
 }
