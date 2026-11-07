@@ -32,7 +32,7 @@ function md5Path (fn) {
 function download (url, timeout = 20000, retries = 2) {
   return new Promise((resolve, reject) => {
     const attempt = (n) => {
-      const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (limbus-dive)' } }, (res) => {
+      const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (limbus-plugin)' } }, (res) => {
         if (res.statusCode === 301 || res.statusCode === 302) {
           res.resume()
           if (res.headers.location) {

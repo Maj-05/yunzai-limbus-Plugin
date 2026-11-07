@@ -7,7 +7,7 @@ import { rememberSelect, peekSelect, clearSelect } from '../lib/selection.mjs'
 export class LimbusQuery2 extends plugin {
   constructor() {
     super({
-      name: '[limbus-dive]EGO/敌人/饰品查询',
+      name: '[limbus-plugin]EGO/敌人/饰品查询',
       dsc: '边狱巴士图鉴查询',
       event: 'message',
       priority: 500,

@@ -10,7 +10,7 @@ import { rememberSelect, takeSelect, peekSelect, clearSelect } from '../lib/sele
 export class LimbusQuery extends plugin {
   constructor() {
     super({
-      name: '[limbus-dive]人格查询',
+      name: '[limbus-plugin]人格查询',
       dsc: '边狱巴士人格图鉴',
       event: 'message',
       priority: 500,

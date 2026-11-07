@@ -24,7 +24,7 @@ function loadUpdateConfig () {
   try {
     const p = path.join(PLUGIN_ROOT, 'config', 'system', 'update.json')
     if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8'))
-  } catch (e) { logger.error('[limbus-dive] 读取 update.json 失败: ' + e.message) }
+  } catch (e) { logger.error('[limbus-plugin] 读取 update.json 失败: ' + e.message) }
   return {}
 }
 
@@ -50,7 +50,7 @@ function getUpstreams () {
 export class LimbusUpdate extends plugin {
   constructor() {
     super({
-      name: '[limbus-dive]更新',
+      name: '[limbus-plugin]更新',
       dsc: '插件自更新与数据重建',
       event: 'message',
       priority: 500,
@@ -78,7 +78,7 @@ export class LimbusUpdate extends plugin {
 
   async version() {
     const info = this._gitInfo()
-    await this.reply(`limbus-dive 当前版本: ${info}`)
+    await this.reply(`limbus-plugin 当前版本: ${info}`)
     return true
   }
 
@@ -141,7 +141,7 @@ export class LimbusUpdate extends plugin {
             fs.rmSync(tmp, { recursive: true, force: true })
             await this.reply('代码已更新（面板安装模式：拉取最新代码覆盖完成）')
           } catch (e) {
-            logger.error(`[limbus-dive] 面板自更新失败: ${e.message}`)
+            logger.error(`[limbus-plugin] 面板自更新失败: ${e.message}`)
             await this.reply(`⚠ 面板自更新失败: ${e.message.slice(0, 40)}\n不影响数据更新`)
           }
         }
@@ -164,7 +164,7 @@ export class LimbusUpdate extends plugin {
           }
         } catch (e) {
           // 单个源失败不中断整个更新（如国内服务器连不上 GitHub）
-          logger.error(`[limbus-dive] 拉取源失败 ${u.name}: ${e.message}`)
+          logger.error(`[limbus-plugin] 拉取源失败 ${u.name}: ${e.message}`)
           await this.reply(`⚠ 拉取源 ${u.name} 失败（${e.message.slice(0, 40)}），已跳过。\n若该源已有本地缓存会继续用旧数据。`)
         }
       }
@@ -184,7 +184,7 @@ export class LimbusUpdate extends plugin {
           const art = await buildArt()
           artLine = `\n立绘: 下载 ${art.downloaded} / 已有 ${result.personalities * 2 + result.egos - art.downloaded - art.failed} / 失败 ${art.failed}`
         } catch (e) {
-          logger.error(`[limbus-dive] 立绘拉取失败: ${e.message}`)
+          logger.error(`[limbus-plugin] 立绘拉取失败: ${e.message}`)
           artLine = '\n立绘: 拉取失败（不影响文字查询）'
         }
       }
@@ -194,7 +194,7 @@ export class LimbusUpdate extends plugin {
         artLine
       )
     } catch (err) {
-      logger.error(`[limbus-dive] 更新失败: ${err.stack || err.message}`)
+      logger.error(`[limbus-plugin] 更新失败: ${err.stack || err.message}`)
       await this.reply(`更新失败: ${err.message}\n常见原因: 服务器无法访问 git.neonteam.dev / github.com（国内服务器建议配置代理）`)
     } finally {
       this._running = false

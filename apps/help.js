@@ -66,7 +66,7 @@ export const CATEGORY_HELP = {
 
 const helpCfg = {
   title: 'Limbus-Dive 帮助',
-  subTitle: 'Yunzai-Bot & limbus-dive',
+  subTitle: 'Yunzai-Bot & limbus-plugin',
   columnCount: 2,
   colWidth: 380,
   style: {
@@ -83,7 +83,7 @@ const helpCfg = {
 export class LimbusHelp extends plugin {
   constructor() {
     super({
-      name: '[limbus-dive]帮助',
+      name: '[limbus-plugin]帮助',
       dsc: '边狱插件帮助',
       event: 'message',
       priority: 490,

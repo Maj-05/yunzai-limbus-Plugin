@@ -1,9 +1,9 @@
 import fs from 'node:fs'
 
-const files = fs.readdirSync('./plugins/yunzai-limbus-dive/apps').filter(f => f.endsWith('.js'))
+const files = fs.readdirSync('./plugins/limbus-plugin/apps').filter(f => f.endsWith('.js'))
 
 logger.info('-------------------------')
-logger.info('limbus-dive 载入成功!')
+logger.info('limbus-plugin 载入成功!')
 logger.info('-------------------------')
 
 let ret = files.map(f => import(`./apps/${f}`))

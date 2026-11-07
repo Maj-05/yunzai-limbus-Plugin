@@ -1,14 +1,14 @@
 import path from 'path'
 import { Version } from '../components/index.js'
 
-const PLUGIN_Name = 'yunzai-limbus-dive'
+const PLUGIN_Name = 'limbus-plugin'
 
 /**
  * 渲染并回复图片（依赖 Yunzai 内置 puppeteer：e.runtime.render）
  */
 export default function runtimeRender (e, tplPath, renderData = {}, cfg = {}) {
   if (!e.runtime || !e.runtime.render) {
-    logger.error('[limbus-dive] 未找到 e.runtime.render，请升级至 TRSS/Miao-Yunzai 最新版')
+    logger.error('[limbus-plugin] 未找到 e.runtime.render，请升级至 TRSS/Miao-Yunzai 最新版')
     return e.reply('渲染失败：Bot 框架版本过低，请联系管理员升级')
   }
   const scale = (cfg.scale || 1) * 1
@@ -25,7 +25,7 @@ export default function runtimeRender (e, tplPath, renderData = {}, cfg = {}) {
         defaultLayout: path.join(layoutPath, 'default.html'),
         sys: {
           scale: pct,
-          copyright: `Created By ${Version.name} & limbus-dive v${Version.version}`
+          copyright: `Created By ${Version.name} & limbus-plugin v${Version.version}`
         },
         quality: 100
       }
