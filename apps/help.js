@@ -35,7 +35,7 @@ const helpList = [
 const CATEGORY_HELP = {
   personality: {
     title: '人格查询帮助',
-    subTitle: 'Limbus-Dive · 如何搜人格',
+    subTitle: 'Limbus-plugin · 如何搜人格',
     list: [
       { title: '#人格 名称', desc: '按人格全名/部分文字搜索，如「#人格 兔希」「#人格 黑云会」' },
       { title: '#人格 罪人名', desc: '列出该罪人全部人格，例「#人格 良秀」' },
@@ -46,7 +46,7 @@ const CATEGORY_HELP = {
   },
   enemy: {
     title: '敌人查询帮助',
-    subTitle: 'Limbus-Dive · 如何搜敌人',
+    subTitle: 'Limbus-plugin · 如何搜敌人',
     list: [
       { title: '#敌人 名称', desc: '按敌人全名/部分文字搜索，如「#敌人 深红薄暮」' },
       { title: '#敌人 片段', desc: '记不全时输入部分文字，如「#敌人 大鸟」' },
@@ -55,7 +55,7 @@ const CATEGORY_HELP = {
   },
   ego: {
     title: 'E.G.O 查询帮助',
-    subTitle: 'Limbus-Dive · 如何搜 E.G.O',
+    subTitle: 'Limbus-plugin · 如何搜 E.G.O',
     list: [
       { title: '#ego 名称', desc: '按E.G.O名称搜索，如「#ego 深沉的悲伤」' },
       { title: '#ego 罪人名', desc: '列出该罪人全部 E.G.O，例「#ego 良秀」' },
@@ -65,7 +65,7 @@ const CATEGORY_HELP = {
 }
 
 const helpCfg = {
-  title: 'Limbus-Dive 帮助',
+  title: 'Limbus-plugin 帮助',
   subTitle: 'Yunzai-Bot & limbus-plugin',
   columnCount: 2,
   colWidth: 380,
