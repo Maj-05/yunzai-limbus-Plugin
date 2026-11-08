@@ -15,6 +15,7 @@ export class LimbusQuery extends plugin {
       event: 'message',
       priority: 500,
       rule: [
+        { reg: `^${rulePrefix}人格对比\s*(.+)$`, fnc: 'comparePersonality' },
         { reg: `^${rulePrefix}(?:人格|身份)\\s*(.+)$`, fnc: 'queryPersonality' },
         { reg: '^#?[1-8]$', fnc: 'selectNumber' }
       ]
@@ -72,6 +73,26 @@ export class LimbusQuery extends plugin {
     return true
   }
 
+
+  async comparePersonality() {
+    const raw = this.e.msg.replace(/#|\/|边狱|巴士|084|limbus|Limbus|人格|身份|对比/g, '').trim()
+    if (!raw || raw === '帮助') return false
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const parts = raw.split(/[\s与和、,，]+/).map(s => s.trim()).filter(Boolean).slice(0, 2)
+    if (parts.length < 2) { await this.reply('用法：#人格对比 目标A 目标B，例：#人格对比 良秀黑云会 良秀W公司'); return true }
+    const cards = []
+    const names = []
+    for (const p of parts) {
+      const ids = db.searchPersonality(p, 1)
+      if (!ids.length) { await this.reply('未找到「' + p + '」'); return true }
+      const card = buildPersonalityCard(ids[0])
+      if (!card) { await this.reply('「' + p + '」数据缺失'); return true }
+      cards.push(card)
+      names.push(card.name)
+    }
+    await runtimeRender(this.e, 'personality/compare', { cards, names }, { scale: 1.4 })
+    return true
+  }
 
   async selectNumber() {
     const q = this.e.msg.replace(/#/g, '').trim()
