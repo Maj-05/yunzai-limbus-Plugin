@@ -40,7 +40,9 @@
           <span class="skill-name">{{s.name}}</span>
         </div>
         <div class="skill-nums">威力{{s.power}} · 基础{{s.base}} · 币{{s.coin}}</div>
-        <div class="skill-desc">{{s.desc}}</div>
+        <div class="skill-desc">
+          {{each s.descLines dl}}<div class="sd-line {{dl.coin ? 'sd-coin' : ''}}">{{dl.text}}</div>{{/each}}
+        </div>
       </div>
       {{/each}}
     </div>

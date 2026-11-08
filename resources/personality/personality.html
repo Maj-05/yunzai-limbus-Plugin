@@ -59,7 +59,9 @@
       <span class="skill-name">{{s.name}}</span>
       <span class="skill-nums">威力{{s.power}} · 基础{{s.base}} · 币数{{s.coin}}</span>
     </div>
-    <div class="skill-desc">{{s.desc}}</div>
+    <div class="skill-desc">
+      {{each s.descLines dl}}<div class="sd-line {{dl.coin ? 'sd-coin' : ''}}">{{dl.text}}</div>{{/each}}
+    </div>
   </div>
   {{/each}}
   {{if card.defense}}
@@ -70,7 +72,9 @@
       <span class="badge" style="background:#3a3a52">{{card.defense.type}}</span>
       <span class="skill-name">{{card.defense.name}}</span>
     </div>
-    <div class="skill-desc">{{card.defense.desc}}</div>
+    <div class="skill-desc">
+      {{each card.defense.descLines dl}}<div class="sd-line {{dl.coin ? 'sd-coin' : ''}}">{{dl.text}}</div>{{/each}}
+    </div>
   </div>
   {{/if}}
 </div>

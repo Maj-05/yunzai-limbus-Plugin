@@ -24,3 +24,7 @@
 .skill-name { font-size: 14px; font-weight: 800; color: #2a2d3a; }
 .skill-nums { font-size: 12px; color: #8a96ad; margin-left: auto; font-weight: 600; }
 .skill-desc { font-size: 13px; color: #3a4050; line-height: 1.65; white-space: pre-wrap; }
+
+/* 技能描述分行 */
+.sd-line { font-size: 13px; color: #3a4050; line-height: 1.6; }
+.sd-coin { color: #2a6ab0; padding-left: 8px; border-left: 2px solid rgba(74,134,200,.35); margin-top: 2px; }
