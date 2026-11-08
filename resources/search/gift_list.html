@@ -17,6 +17,9 @@
     {{each g.items it i}}
     <div class="gl-item">
       <span class="gl-idx">{{i + 1}}</span>
+      {{if it.artSrc}}
+      <img class="gl-art" src="{{it.artLocal ? (pluResPath + 'art/' + it.artSrc) : it.artSrc}}" onerror="this.onerror=null;this.style.display='none';"/>
+      {{/if}}
       <span class="gl-name">{{it.name}}</span>
       <span class="gl-id">ID {{it.id}}</span>
     </div>

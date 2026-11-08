@@ -5,3 +5,5 @@
 .gl-idx { width: 22px; height: 22px; border-radius: 50%; background: rgba(74,134,200,.14); color: #2a4a7f; text-align: center; line-height: 22px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
 .gl-name { flex: 1; font-size: 13px; color: #2a2d3a; }
 .gl-id { font-size: 11px; color: #8a96ad; }
+
+.gl-art { width: 34px; height: 34px; object-fit: cover; border-radius: 6px; flex-shrink: 0; background: #dfe7f2; }

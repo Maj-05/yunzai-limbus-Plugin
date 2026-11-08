@@ -6,6 +6,11 @@
 {{/block}}
 
 {{block 'main'}}
+{{if card.artSrc}}
+<div class="gift-art-banner">
+  <img class="gift-art" src="{{card.artLocal ? (pluResPath + 'art/' + card.artSrc) : card.artSrc}}" onerror="this.onerror=null;this.style.display='none';"/>
+</div>
+{{/if}}
 <div class="gift-card-wrap">
   <div class="gift-rarity" style="background:{{card.rarityColor}}">
     <span class="gift-tier">{{'◆'.repeat(card.rarityTier)}}</span>
