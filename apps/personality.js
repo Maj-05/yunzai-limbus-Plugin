@@ -15,8 +15,8 @@ export class LimbusQuery extends plugin {
       event: 'message',
       priority: 500,
       rule: [
-        { reg: `^${rulePrefix}人格对比\s*(.+)$`, fnc: 'comparePersonality' },
-        { reg: `^${rulePrefix}(?:人格|身份)\\s*(.+)$`, fnc: 'queryPersonality' },
+        { reg: `^${rulePrefix}(?:人格|身份)对比\s*(.+)$`, fnc: 'comparePersonality' },
+        { reg: `^${rulePrefix}(?:人格|身份)(?!对比)\s*(.+)$`, fnc: 'queryPersonality' },
         { reg: '^#?[1-8]$', fnc: 'selectNumber' }
       ]
     })
