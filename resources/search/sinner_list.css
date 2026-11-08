@@ -1,13 +1,13 @@
-/* 罪人列表：人格 / EGO 一览 */
+/* 罪人列表：人格 / EGO 一览（明亮主题） */
 .head-box .title { font-size: 30px; }
 .s-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
-.s-card { display: flex; gap: 11px; background: linear-gradient(180deg, rgba(30,32,52,.9), rgba(22,24,40,.86)); border: 1px solid rgba(130,140,190,.16); border-radius: 13px; padding: 9px; align-items: center; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
-.s-art { width: 62px; height: 62px; object-fit: cover; border-radius: 9px; background: #1a1a2e; flex-shrink: 0; border: 1px solid rgba(130,140,190,.14); }
-.s-art-ph { display: flex; align-items: center; justify-content: center; color: #9aa0bd; font-size: 12px; text-align: center; font-weight: 700; }
+.s-card { display: flex; gap: 11px; background: #fff; border: 1px solid rgba(120,140,180,.22); border-radius: 13px; padding: 9px; align-items: center; box-shadow: 0 3px 12px rgba(60,80,120,.1); }
+.s-art { width: 62px; height: 62px; object-fit: cover; border-radius: 9px; background: #dfe7f2; flex-shrink: 0; border: 1px solid rgba(120,140,180,.18); }
+.s-art-ph { display: flex; align-items: center; justify-content: center; color: #6a7890; font-size: 12px; text-align: center; font-weight: 700; }
 .s-body { flex: 1; min-width: 0; }
-.s-name { font-size: 13px; font-weight: 800; color: #f2f2fa; line-height: 1.3; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.s-name { font-size: 13px; font-weight: 800; color: #2a2d3a; line-height: 1.3; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .s-meta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.s-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
-.s-dark { background: #3a3a58; }
-.s-id { font-size: 11px; color: #7a80a0; margin-left: auto; }
+.s-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #fff; box-shadow: 0 1px 3px rgba(60,80,120,.2); }
+.s-dark { background: #5a6a88; }
+.s-id { font-size: 11px; color: #8a96ad; margin-left: auto; }
 @media (max-width: 640px) { .s-grid { grid-template-columns: 1fr; } }

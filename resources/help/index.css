@@ -1,51 +1,18 @@
+/* 帮助菜单（明亮主题 + 背景图） */
 body { width: 820px; }
-
-.head-box {
-  padding: 8px 4px 2px;
+body { min-height: 100%; }
+/* 背景：边狱巴士角色图（本地 bg.jpg），右缘浅显展示，白色叠加保证可读 */
+.container {
+  background:
+    linear-gradient(105deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.92) 60%, rgba(255,255,255,.82) 100%),
+    url("bg.jpg") no-repeat right top / auto 100%;
 }
-.head-box .title,
-.head-box .label {
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
-}
-
-.cont-box {
-  border-radius: 10px;
-  margin-bottom: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
-  background: rgba(14, 14, 22, 0.72);
-}
-
-.help-group {
-  font-size: 18px;
-  font-weight: bold;
-  padding: 12px 18px;
-  background: rgba(30, 30, 42, 0.72);
-  color: #e8d5a3;
-}
-
-.help-table {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: rgba(60, 60, 80, 0.2);
-}
-
-.help-table .td {
-  background: rgba(20, 20, 30, 0.82);
-  padding: 12px 16px;
-}
-
-.help-title {
-  display: block;
-  color: #d3bc8e;
-  font-size: 15px;
-  margin-bottom: 3px;
-}
-
-.help-desc {
-  display: block;
-  font-size: 12px;
-  color: #a8a8b8;
-  line-height: 1.5;
-}
+.head-box { padding: 10px 4px 6px; }
+.head-box .title { font-size: 40px; color: #2a4a7f; text-shadow: 0 1px 0 rgba(255,255,255,.7); }
+.head-box .label { color: #5a6a88; }
+.cont-box { border-radius: 14px; margin-bottom: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(60,80,120,.14); background: rgba(255,255,255,.9); border: 1px solid rgba(120,140,180,.25); }
+.help-group { font-size: 18px; font-weight: 800; padding: 12px 18px; background: linear-gradient(90deg, rgba(74,134,200,.16), rgba(74,134,200,.04)); color: #2a4a7f; border-bottom: 1px solid rgba(120,140,180,.18); }
+.help-table { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: rgba(120,140,180,.14); }
+.help-table .td { background: rgba(255,255,255,.95); padding: 12px 16px; }
+.help-title { display: block; color: #2a4a7f; font-size: 15px; margin-bottom: 3px; font-weight: 700; }
+.help-desc { display: block; font-size: 12px; color: #6a7890; line-height: 1.5; }

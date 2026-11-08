@@ -1,57 +1,12 @@
-/* limbus-plugin 公共样式 */
+/* limbus-plugin 公共样式（明亮主题） */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  width: 780px;
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-  color: #eef0f6;
-  background: #0f1020;
-}
-
-.container {
-  padding: 22px 24px 26px;
-  background:
-    radial-gradient(1200px 400px at 15% -10%, rgba(76, 70, 180, 0.16), transparent 60%),
-    radial-gradient(1000px 500px at 100% 10%, rgba(170, 60, 90, 0.10), transparent 55%),
-    linear-gradient(165deg, #171a2e 0%, #11142a 45%, #0c0e1e 100%);
-}
-
+body { width: 780px; font-family: "Microsoft YaHei", "PingFang SC", sans-serif; color: #2a2d3a; background: #e9eef6; }
+.container { padding: 22px 24px 26px; background: linear-gradient(165deg, #eef3fa 0%, #e4ecf6 50%, #dce6f2 100%); }
 .head-box { margin: 10px 2px 18px; }
-.head-box .title {
-  font-size: 34px; font-weight: 800;
-  color: #f0e6c8; letter-spacing: 1.5px;
-  text-shadow: 0 2px 14px rgba(0,0,0,.55);
-}
-.head-box .label { font-size: 13px; color: #9aa0bd; margin-top: 5px; letter-spacing: .5px; }
-
-.card {
-  background: linear-gradient(180deg, rgba(30,32,52,.92), rgba(22,24,40,.88));
-  border: 1px solid rgba(130,140,190,.18);
-  border-radius: 14px;
-  padding: 16px 18px;
-  margin-bottom: 14px;
-  box-shadow: 0 8px 22px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
-}
-
-.card-title {
-  font-size: 16px; font-weight: 800;
-  color: #e8d9a8;
-  letter-spacing: 3px;
-  margin-bottom: 11px;
-  padding: 0 0 9px 10px;
-  border-left: 3px solid #c9a86a;
-  border-bottom: 1px solid rgba(130,140,190,.14);
-}
-
-.badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 12px; font-weight: 700;
-  color: #fff;
-  margin-right: 6px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.3);
-}
-
-.copyright { text-align: center; font-size: 11px; color: #6a7090; margin-top: 16px; }
-.copyright .version { color: #8a90ad; }
+.head-box .title { font-size: 34px; font-weight: 800; color: #2a4a7f; letter-spacing: 1.5px; text-shadow: 0 1px 0 rgba(255,255,255,.6); }
+.head-box .label { font-size: 13px; color: #6a7890; margin-top: 5px; letter-spacing: .5px; }
+.card { background: rgba(255,255,255,.92); border: 1px solid rgba(120,140,180,.25); border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; box-shadow: 0 4px 16px rgba(60,80,120,.12); }
+.card-title { font-size: 16px; font-weight: 800; color: #2a4a7f; letter-spacing: 2px; margin-bottom: 11px; padding: 0 0 9px 10px; border-left: 4px solid #4a86c8; border-bottom: 1px solid rgba(120,140,180,.18); }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #fff; margin-right: 6px; box-shadow: 0 1px 3px rgba(60,80,120,.2); }
+.copyright { text-align: center; font-size: 11px; color: #8a96ad; margin-top: 16px; }
+.copyright .version { color: #6a7aa0; }
