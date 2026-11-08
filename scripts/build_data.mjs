@@ -238,9 +238,15 @@ export async function buildAll (upstreamDir, outDir) {
       resist: []
     })
   }
-  // 数值表（abnormality-unit.json）合并抗性/技能；目录缺失则跳过，不让构建崩溃
-  const abnStat = list(readJson(path.join(SD, 'abnormality-unit', 'abnormality-unit.json')))
-  const abnById = new Map(abnStat.map(a => [a.id, a]))
+  // 数值表（abnormality-unit/*.json）合并抗性/技能；目录缺失则跳过，不让构建崩溃。
+  // 只读 abnormality-unit.json 会漏掉 mirror/refraction/walpu/wp 等赛季变体，导致敌人抗性/技能全空。
+  const abnById = new Map()
+  const abnFiles = listDir(path.join(SD, 'abnormality-unit')).filter(f => f.endsWith('.json'))
+  for (const f of abnFiles) {
+    for (const a of list(readJson(path.join(SD, 'abnormality-unit', f)))) {
+      if (a.id != null) abnById.set(a.id, a)
+    }
+  }
   for (const e of enemies) {
     const st = abnById.get(e.id)
     if (!st) continue
@@ -255,8 +261,16 @@ export async function buildAll (upstreamDir, outDir) {
   const giftText2 = list(readJson(path.join(CN, 'EGOgift_MirrorDungeon_2.json')))
   const giftMap = new Map()
   for (const g of [...giftText2, ...giftText]) giftMap.set(g.id, g) // _2 优先
-  const giftStatList = list(readJson(path.join(SD, 'ego-gift-mirrordungeon', 'ego-gift-mirrordungeon.json')))
-  const giftRarity = new Map(giftStatList.map(g => [g.id, g.rarity]))
+  // 饰品稀有度：枚举 ego-gift-mirrordungeon 目录下所有 *.json 合并
+  // （仅读 ego-gift-mirrordungeon.json 会漏掉 2/3/4/5/6/7/extreme 等赛季饰品，导致级别全为1）
+  const giftRarity = new Map()
+  const giftStatFiles = listDir(path.join(SD, 'ego-gift-mirrordungeon'))
+    .filter(f => /^ego-gift-.+\.json$/.test(f))
+  for (const f of giftStatFiles) {
+    for (const g of list(readJson(path.join(SD, 'ego-gift-mirrordungeon', f)))) {
+      if (g.id != null) giftRarity.set(g.id, g.rarity ?? 0)
+    }
+  }
   for (const [gid, t] of giftMap) {
     egogifts.push({
       id: gid,
