@@ -34,6 +34,36 @@ function list(json) {
   return json.list || json.dataList || []
 }
 
+/** 安全读目录：目录不存在或读取失败返回 []，避免单个上游子目录缺失让整个构建崩溃 */
+function listDir(dir) {
+  try {
+    return fs.readdirSync(dir)
+  } catch {
+    return []
+  }
+}
+
+/**
+ * 敌人类型推导。上游数值源（abnormality-unit）无独立 type 字段时，
+ * 用中文文本表 Enemies.json 的 desc 与 id 结构分类：
+ *   - desc 含「本体」→ 异常体本体（abno）
+ *   - desc 含「部位」→ 异常体部位（part）
+ *   - desc 含「头目」→ 人类·头目（human_boss）
+ *   - desc 含「单位」→ 人类·单位（human）
+ *   - desc 为空时按 id 兜底：6 位及以上=部位；5 位且以 9 开头=人类单位；否则=异常体本体
+ */
+function enemyType(t, id) {
+  const d = (t.desc || '').trim()
+  if (d.includes('本体')) return 'abno'
+  if (d.includes('部位')) return 'part'
+  if (d.includes('头目')) return 'human_boss'
+  if (d.includes('单位')) return 'human'
+  const s = String(id)
+  if (s.length >= 6) return 'part'
+  if (s.length >= 5 && s[0] === '9') return 'human'
+  return 'abno'
+}
+
 /** 文本表 → Map<id, item>（skills/passives 的 dataList 是数组带 id） */
 function textMap(json) {
   const m = {}
@@ -143,8 +173,8 @@ export async function buildAll (upstreamDir, outDir) {
       skillStat[sk.id] = sk
     }
   }
-  // EGO 技能数值
-  const egoSkillFiles = fs.readdirSync(path.join(SD, 'skill')).filter(f => f.startsWith('ego-skill'))
+  // EGO 技能数值（skill 目录缺失或无数值文件时跳过，不让构建崩溃）
+  const egoSkillFiles = listDir(path.join(SD, 'skill')).filter(f => f.startsWith('ego-skill'))
   for (const f of egoSkillFiles) {
     for (const sk of list(readJson(path.join(SD, 'skill', f)))) skillStat[sk.id] = sk
   }
@@ -196,19 +226,19 @@ export async function buildAll (upstreamDir, outDir) {
   }
 
   // ===== 敌人 =====
+  // 中文文本表（Enemies.json）为主索引；数值表（abnormality-unit）缺失时也能正常构建（抗性/技能留空）。
   const enemies = []
-  const enemyStatFiles = fs.readdirSync(path.join(SD, 'abnormality-unit')).filter(f => f === 'abnormality-unit.json' || f.startsWith('abnormality-unit-'))
-  // 文本表为主索引
   for (const [id, t] of enemyName) {
     enemies.push({
       id,
       name: t.name || `敌人${id}`,
       desc: t.desc || '',
+      type: enemyType(t, id),   // 本体/部位/人类头目/人类单位（无上游 type 字段时由 desc/id 推导）
       skills: [],
       resist: []
     })
   }
-  // 数值表（abnormality-unit.json）合并抗性/技能
+  // 数值表（abnormality-unit.json）合并抗性/技能；目录缺失则跳过，不让构建崩溃
   const abnStat = list(readJson(path.join(SD, 'abnormality-unit', 'abnormality-unit.json')))
   const abnById = new Map(abnStat.map(a => [a.id, a]))
   for (const e of enemies) {
@@ -238,12 +268,11 @@ export async function buildAll (upstreamDir, outDir) {
   }
 
   // ===== 技能/被动文本 =====
-  // 合并全部技能文本表：通用 + EGO + 敌人 + 异常体 + 12罪人人格技能 + 人格专属EGO技能
-  const skillFiles = [
-    'Skills.json', 'Skills_Ego.json', 'Skills_Enemy.json', 'Skills_Abnormality.json',
-    ...Array.from({ length: 12 }, (_, i) => `Skills_personality-${String(i + 1).padStart(2, '0')}.json`),
-    ...Array.from({ length: 12 }, (_, i) => `Skills_Ego_Personality-${String(i + 1).padStart(2, '0')}.json`)
-  ]
+  // 合并全部技能文本表：自动枚举 LLC_zh-CN 下所有 Skills*.json
+  // （通用 + EGO + 敌人 + 异常体 + 各罪人人格技能 + 人格专属EGO技能，命名随上游演变也能被扫到）
+  const skillFiles = listDir(CN)
+    .filter(f => /^Skills/i.test(f) && f.endsWith('.json'))
+    .sort()
   const skills = {}
   for (const f of skillFiles) {
     const json = readJson(path.join(CN, f))

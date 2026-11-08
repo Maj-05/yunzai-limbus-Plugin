@@ -83,12 +83,39 @@ export class LimbusQuery2 extends plugin {
     )
   }
   async queryEnemy() {
+    const q = this._strip(this.e.msg, '敌人|abnormality')
+    if (!db.load()) {
+      await this.reply('图鉴数据未就绪，请联系管理员运行数据构建')
+      return true
+    }
+    // 类型筛选：#敌人 异常体 / #敌人 部位 / #敌人 人类 / #敌人 头目 等
+    const tkw = db.enemyTypeKeyword(q)
+    if (tkw) {
+      const ids = db.enemiesOfType(tkw.type)
+      if (!ids.length) { await this.reply(`没有「${tkw.label}」类型的敌人`); return true }
+      // 数量大时只列前一批，避免刷屏；序号可直接选后续由 selectNumber 处理
+      const shown = ids.slice(0, 8)
+      rememberSelect(this.e.user_id, { ids, kindName: '敌人', render: buildEnemyCard, tpl: 'enemy/enemy' })
+      await runtimeRender(this.e, 'search/search', {
+        kind: `敌人·${tkw.label}`,
+        keyword: `${tkw.label}（共 ${ids.length} 个）`,
+        results: suggestions(shown, 'enemy')
+      }, { scale: 1.4 })
+      return true
+    }
+    // 类型概览：#敌人 类型 / #敌人 分类
+    if (/^(类型|分类)$/i.test(q)) {
+      const c = db.enemyTypeCounts()
+      const lines = Object.entries(c).map(([k, v]) => `· ${v.label}：${v.count} 个`)
+      await this.reply(`【敌人类型概览】\n${lines.join('\n')}\n\n用法：#敌人 <类型>，如 #敌人 异常体 / 部位 / 人类 / 头目`)
+      return true
+    }
     return this._query(
       { search: db.searchEnemy.bind(db), get: db.getEnemy.bind(db) },
       '敌人', 'enemy',
-      this._strip(this.e.msg, '敌人|abnormality'),
+      q,
       buildEnemyCard, 'enemy/enemy',
-      '用法：#敌人 名称，例如 #敌人 深红薄暮'
+      '用法：#敌人 名称，例如 #敌人 黑檀女王的苹果\n或按类型：异常体 / 部位 / 人类 / 头目'
     )
   }
 
