@@ -119,7 +119,7 @@ export class LimbusTool extends plugin {
     return true
   }
 
-  /** #配队 <流派名>：推荐该流派的配队（人格 + EGO） */
+  /** #配队 <流派名>：推荐该流派的配队（人格 + EGO），优先展示精选核心组合 */
   async teamInfo() {
     if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
     const q = this._stripKw(this.e.msg, '配队|队伍')
@@ -136,16 +136,16 @@ export class LimbusTool extends plugin {
       await this.reply(`没有「${q}」这个流派。\n可用流派：${names}`)
       return true
     }
-    const kws = f.keywords || [f.name]
-    const kwHit = (txt) => kws.some(kw => (txt || '').includes(kw))
-    // 按被动文本扫人格
-    const pers = db.personalities.filter(p =>
-      (p.passives || []).some(pv => kwHit(db.passiveText(pv.id)?.desc))
-    ).slice(0, 8).map(p => p.name)
-    // 按觉醒/侵蚀技能文本扫 EGO
-    const egos = db.egos.filter(g =>
-      kwHit(db.skillText(g.awakenSkillId)?.desc) || kwHit(db.skillText(g.corrodeSkillId)?.desc)
-    ).slice(0, 8).map(g => g.name)
+    // 精选推荐（flows 人工整理的核心人格/EGO），按名字模糊匹配到实际数据
+    // 只展示精选核心，避免机械关键词扫描把旧赛季老人格也带进来
+    const resolveName = (nm, kind) => {
+      const ids = kind === 'ego' ? db.searchEgo(nm, 1) : db.searchPersonality(nm, 1)
+      const item = ids[0] ? (kind === 'ego' ? db.getEgo(ids[0]) : db.getPersonality(ids[0])) : null
+      return item ? item.name : null
+    }
+    const pers = (f.topPers || []).map(nm => resolveName(nm, 'pers')).filter(Boolean)
+    const egos = (f.topEgos || []).map(nm => resolveName(nm, 'ego')).filter(Boolean)
+
     const body = []
     body.push(`【${f.name}流配队】`)
     body.push(pers.length ? `推荐人格：\n${pers.map(n => '· ' + n).join('\n')}` : '推荐人格：无（该流派人格数据未收录）')
