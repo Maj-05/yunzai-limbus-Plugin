@@ -17,14 +17,6 @@ const helpList = [
       { icon: 9, title: '回复 1-8', desc: '多命中时回复序号直接选中' }
     ]
   }, {
-    group: '快速昵称',
-    list: [
-      { icon: 12, title: '#人格 兔希', desc: '希斯克利夫 R公司兔子队' },
-      { icon: 13, title: '#人格 兔子 / 驯鹿 / 犀牛', desc: '按R公司称号搜索' },
-      { icon: 14, title: '#人格 浮 / 希 / 梅尔', desc: '罪人简称搜索' },
-      { icon: 15, title: '#人格 深郁', desc: '以实玛利 E.G.O 深郁的忧伤' }
-    ]
-  }, {
     group: '帮助与数据',
     list: [
       { icon: 16, title: '#limbus帮助 / #巴士帮助 / #084帮助', desc: '打开帮助菜单' },
