@@ -22,7 +22,14 @@ for (const i in files) {
     logger.error(ret[i].reason)
     continue
   }
-  apps[name] = ret[i].value[Object.keys(ret[i].value)[0]]
+  // 取插件类（filter 出 class 导出，避免多导出时误取普通对象）
+  const exps = ret[i].value
+  let cls = null
+  for (const k of Object.keys(exps)) {
+    const v = exps[k]
+    if (typeof v === 'function' && /^class\s/.test(Function.prototype.toString.call(v))) { cls = v; break }
+  }
+  apps[name] = cls || Object.values(exps)[0]
 }
 
 export { apps }

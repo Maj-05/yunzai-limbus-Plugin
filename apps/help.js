@@ -32,7 +32,7 @@ const helpList = [
 ]
 
 /** 分类帮助：人格 / 敌人 / EGO */
-export const CATEGORY_HELP = {
+const CATEGORY_HELP = {
   personality: {
     title: '人格查询帮助',
     subTitle: 'Limbus-Dive · 如何搜人格',
