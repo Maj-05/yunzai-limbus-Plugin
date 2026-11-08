@@ -182,7 +182,8 @@ export class LimbusUpdate extends plugin {
           await this.reply('正在拉取人格+E.G.O 立绘（首次约几分钟，之后增量）…')
           const { build: buildArt } = await import('../scripts/fetch_art.mjs')
           const art = await buildArt()
-          artLine = `\n立绘: 下载 ${art.downloaded} / 已有 ${result.personalities * 2 + result.egos - art.downloaded - art.failed} / 失败 ${art.failed}`
+          artLine = `\n立绘: 需下载 ${art.need} / 已下载 ${art.downloaded} / 已有 ${art.existed} / 失败 ${art.failed}` +
+            (art.failed > 0 ? '\n立绘失败较多：多为服务器无法访问图床 huijistatic.com，可配代理；缺失立绘会自动回退在线热链（不影响文字查询）' : '')
         } catch (e) {
           logger.error(`[limbus-plugin] 立绘拉取失败: ${e.message}`)
           artLine = '\n立绘: 拉取失败（不影响文字查询）'

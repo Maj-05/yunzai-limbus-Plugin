@@ -133,7 +133,7 @@ export async function build () {
 
   fs.writeFileSync(INDEX, JSON.stringify(index))
   console.log(`[art] 完成: 需下载 ${need}, 已下载 ${downloaded}, 已有 ${existed}, 失败 ${failed}, 耗时 ${((Date.now() - t0) / 1000).toFixed(1)}s`)
-  return { downloaded, failed }
+  return { downloaded, existed, failed, need }
 }
 
 if (process.argv[1] && process.argv[1].endsWith('fetch_art.mjs')) {
