@@ -28,10 +28,14 @@ export class LimbusQuery extends plugin {
       await this.reply('图鉴数据未就绪，请联系管理员运行数据构建')
       return true
     }
-    // 罪人名 → 列出该罪人全部人格（图片列表）
-    const cid = db.resolveSinner(q)
+    // 罪人名 → 列出该罪人全部人格（图片列表），支持 #人格 良秀 3 按赛季过滤
+    let season = null
+    const seasonM = q.match(/(?:赛季)?\s*(\d{1,4})\s*$/)
+    if (seasonM) season = Number(seasonM[1])
+    const sinnerQ = season !== null ? q.slice(0, q.length - seasonM[0].length).trim() : q
+    const cid = db.resolveSinner(sinnerQ)
     if (cid) {
-      const list = buildSinnerPersonalityList(cid)
+      const list = buildSinnerPersonalityList(cid, season)
       await runtimeRender(this.e, 'search/sinner_list', list, { scale: 1.4 })
       return true
     }
