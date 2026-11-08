@@ -10,7 +10,11 @@ const helpList = [
       { icon: 2, title: '#ego <名称>', desc: 'E.G.O 详情：觉醒/侵蚀/费用/抗性' },
       { icon: 3, title: '#敌人 <名称>', desc: '敌人详情：技能/抗性' },
       { icon: 4, title: '#饰品 <名称>', desc: '镜牢 E.G.O 饰品' },
-      { icon: 5, title: '#人格 <罪人名>', desc: '列出该罪人全部人格，例:#人格 良秀' }
+      { icon: 5, title: '#人格 <罪人名>', desc: '列出该罪人全部人格，例:#人格 良秀' },
+      { icon: 6, title: '#人格 <罪人> <赛季>', desc: '按赛季过滤，例:#人格 良秀 3' },
+      { icon: 7, title: '#饰品列表 [级别]', desc: '饰品按级别概览 / 指定级别，例:#饰品列表 1' },
+      { icon: 8, title: '#人格 10201 / #ego 20307', desc: '直接按 ID 查询' },
+      { icon: 9, title: '回复 1-8', desc: '多命中时回复序号直接选中' }
     ]
   }, {
     group: '快速昵称',
@@ -24,7 +28,7 @@ const helpList = [
     group: '帮助与数据',
     list: [
       { icon: 16, title: '#limbus帮助 / #巴士帮助 / #084帮助', desc: '打开帮助菜单' },
-      { icon: 17, title: '#limbus更新', desc: '(master) 更新插件+数据' },
+      { icon: 17, title: '#limbus更新 / 强制 / 数据', desc: '(master) 更新插件+数据 / 强制 / 仅数据' },
       { icon: 18, title: '#图鉴状态', desc: '查看数据统计' },
       { icon: 19, title: '#limbus版本', desc: '查看插件版本号' }
     ]
