@@ -14,8 +14,8 @@ export class LimbusQuery2 extends plugin {
       rule: [
         { reg: `^${rulePrefix}(?:ego|EGO|E\\.G\\.O)\\s*(.+)$`, fnc: 'queryEgo' },
         { reg: `^${rulePrefix}(?:敌人|abnormality)\\s*(.+)$`, fnc: 'queryEnemy' },
-        { reg: `^${rulePrefix}(?:饰品|egogift|EGO饰品)\\s*(.+)$`, fnc: 'queryGift' },
         { reg: `^${rulePrefix}(?:饰品|egogift)(?:列表|list|全部)\s*(\\d{0,2})$`, fnc: 'giftList' },
+        { reg: `^${rulePrefix}(?:饰品|egogift|EGO饰品)\\s*(.+)$`, fnc: 'queryGift' },
         { reg: '^#?[1-8]$', fnc: 'selectNumber' },
         { reg: `^${rulePrefix}图鉴状态$`, fnc: 'status' }
       ]
@@ -93,10 +93,13 @@ export class LimbusQuery2 extends plugin {
   }
 
   async queryGift() {
+    // 列表关键词兜底（#饰品 列表 等带空格写法）
+    const raw = this._strip(this.e.msg, '饰品|egogift|EGO饰品')
+    if (/^(列表|list|全部)$/i.test(raw)) return this.giftList()
     return this._query(
       { search: db.searchGift.bind(db), get: db.getGift.bind(db) },
       '饰品', 'gift',
-      this._strip(this.e.msg, '饰品|egogift|EGO饰品'),
+      raw,
       buildGiftCard, 'gift/gift',
       '用法：#饰品 名称，例如 #饰品 万人敌'
     )
