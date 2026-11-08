@@ -101,7 +101,7 @@ export class LimbusQuery2 extends plugin {
       '饰品', 'gift',
       raw,
       buildGiftCard, 'gift/gift',
-      '用法：#饰品 名称，例如 #饰品 万人敌'
+      '用法：#饰品 名称，例如 #饰品 信徒面具'
     )
   }
 
