@@ -15,8 +15,7 @@ export class LimbusQuery extends plugin {
       event: 'message',
       priority: 500,
       rule: [
-        { reg: `^${rulePrefix}(?:人格|身份)对比\s*(.+)$`, fnc: 'comparePersonality' },
-        { reg: `^${rulePrefix}(?:人格|身份)(?!对比)\s*(.+)$`, fnc: 'queryPersonality' },
+        { reg: `^${rulePrefix}(?:人格|身份)\s*(.+)$`, fnc: 'queryPersonality' },
         { reg: '^#?[1-8]$', fnc: 'selectNumber' }
       ]
     })
@@ -25,9 +24,6 @@ export class LimbusQuery extends plugin {
   async queryPersonality() {
     const q = this.e.msg.replace(/#|\/|边狱|巴士|084|limbus|Limbus|人格|身份/g, '').trim()
     if (!q || q === '帮助') return false  // 帮助交给 help.js
-    // 兜底：若老版规则把「对比」当查询词放进了 q（compare 规则未命中的场景），
-    // 识别「对比」并转走 comparePersonality，保证 #人格对比 一定能生效。
-    if (/^对比/.test(q)) return this.comparePersonality()
     if (!db.load()) {
       await this.reply('图鉴数据未就绪，请联系管理员运行数据构建')
       return true
@@ -73,27 +69,6 @@ export class LimbusQuery extends plugin {
       return true
     }
     await runtimeRender(this.e, 'personality/personality', { card }, { scale: 1.4 })
-    return true
-  }
-
-
-  async comparePersonality() {
-    const raw = this.e.msg.replace(/#|\/|边狱|巴士|084|limbus|Limbus|人格|身份|对比/g, '').trim()
-    if (!raw || raw === '帮助') return false
-    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
-    const parts = raw.split(/[\s与和、,，]+/).map(s => s.trim()).filter(Boolean).slice(0, 2)
-    if (parts.length < 2) { await this.reply('用法：#人格对比 目标A 目标B，例：#人格对比 良秀黑云会 良秀W公司'); return true }
-    const cards = []
-    const names = []
-    for (const p of parts) {
-      const ids = db.searchPersonality(p, 1)
-      if (!ids.length) { await this.reply('未找到「' + p + '」'); return true }
-      const card = buildPersonalityCard(ids[0])
-      if (!card) { await this.reply('「' + p + '」数据缺失'); return true }
-      cards.push(card)
-      names.push(card.name)
-    }
-    await runtimeRender(this.e, 'personality/compare', { cards, names }, { scale: 1.4 })
     return true
   }
 
