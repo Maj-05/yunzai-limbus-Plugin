@@ -18,7 +18,7 @@ Yunzai (TRSS/Miao) 边狱巴士（Limbus Company）图鉴插件。
 
 ```bash
 cd /path/to/TRSS-Yunzai
-git clone https://github.com/Maj-05/yunzai-limbus-dive plugins/limbus-plugin
+git clone https://github.com/Maj-05/yunzai-limbus-plugin plugins/limbus-plugin
 cd plugins/limbus-plugin && pnpm i
 ```
 

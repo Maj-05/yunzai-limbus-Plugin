@@ -13,7 +13,7 @@ const execAsync = promisify(exec)
  *  #limbus更新数据    → 仅重建图鉴数据（需要 data/upstream 已存在）
  *  #图鉴状态          → 数据统计
  */
-const REPO_URL = 'https://github.com/Maj-05/yunzai-limbus-dive.git'
+const REPO_URL = 'https://github.com/Maj-05/yunzai-limbus-plugin.git'
 // 上游数据源（可在 config/system/update.json 覆盖 url / 设置 ghMirror 走 GitHub 代理）
 const DEFAULT_UPSTREAMS = [
   { name: 'LimbusStaticData', url: 'https://git.neonteam.dev/yuvlian/LimbusStaticData.git', gh: false },
