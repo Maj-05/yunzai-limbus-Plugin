@@ -66,11 +66,19 @@ export class LimbusQuery2 extends plugin {
   }
 
   async queryEgo() {
-    const q = this._strip(this.e.msg, 'ego|E\.G\.O|EGO')
-    // 罪人名 → 列出该罪人全部 EGO（图片列表）
+    const raw = this._strip(this.e.msg, 'ego|E\.G\.O|EGO')
+    // 罪人名 → 列出该罪人全部 EGO（图片列表），支持 #ego 良秀 WAW 按等级过滤
+    // 尾部匹配 EGO 等级（ZAYIN/TETH/HE/WAW/ALEPH，大小写不限）
+    let grade = null
+    let q = raw
+    const gm = q.match(/\s*([A-Za-z]{3,6})\s*$/i)
+    if (gm && /^(ZAYIN|TETH|HE|WAW|ALEPH)$/i.test(gm[1])) {
+      grade = gm[1].toUpperCase()
+      q = q.slice(0, q.length - gm[0].length).trim()
+    }
     const cid = db.resolveSinner(q)
     if (cid) {
-      const list = buildSinnerEgoList(cid)
+      const list = buildSinnerEgoList(cid, grade)
       await runtimeRender(this.e, 'search/sinner_list', list, { scale: 1.4 })
       return true
     }
