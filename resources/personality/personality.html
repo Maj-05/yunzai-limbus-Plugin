@@ -53,7 +53,7 @@
   {{each card.skills s}}
   <div class="skill">
     <div class="skill-head">
-      <span class="slot">{{s.slot}}技能</span>
+      <span class="slot">{{s.slot === 0 ? '追撃' : (s.slot + '技能')}}</span>
       <span class="badge" style="background:{{s.sinColor}}">{{s.sinName}}</span>
       <span class="badge" style="background:#3a3a52">{{s.atkName}}</span>
       <span class="skill-name">{{s.name}}</span>
