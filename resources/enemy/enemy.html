@@ -7,7 +7,10 @@
 {{block 'main'}}
 <div class="head-box">
   <div class="title">{{card.name}}</div>
-  <div class="label"><span class="badge" style="background:#3a3a52">ID {{card.id}}</span></div>
+  <div class="label">
+    <span class="badge" style="background:{{card.typeColor}}">{{card.typeName}}</span>
+    <span class="badge" style="background:#3a3a52">ID {{card.id}}</span>
+  </div>
 </div>
 
 {{if card.resist.length}}
@@ -20,6 +23,11 @@
     </div>
     {{/each}}
   </div>
+</div>
+{{else if card.noResist}}
+<div class="card">
+  <div class="card-title">抗性</div>
+  <div class="skill-desc">暂无抗性数据（上游数值源未包含该敌人）</div>
 </div>
 {{/if}}
 
@@ -35,6 +43,11 @@
     <div class="skill-desc">{{s.desc}}</div>
   </div>
   {{/each}}
+</div>
+{{else if card.noSkills}}
+<div class="card">
+  <div class="card-title">技能</div>
+  <div class="skill-desc">暂无技能数据（上游数值源未包含该敌人）</div>
 </div>
 {{/if}}
 

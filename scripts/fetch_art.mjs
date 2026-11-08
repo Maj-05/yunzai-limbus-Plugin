@@ -80,6 +80,9 @@ export async function build () {
     { file: EGO_DATA, kinds: ['awaken_profile'], total: 0 },
     { file: GIFT_DATA, kinds: ['normal'], total: 0 }
   ]
+
+  // 收集全部待下载任务（已存在本地的跳过，记入 existed）
+  const tasks = []
   let grandTotal = 0
   for (const src of sources) {
     if (!fs.existsSync(src.file)) continue
@@ -96,27 +99,40 @@ export async function build () {
           existed++
           continue
         }
-        const url = `https://${HOST}${BASE}/${md5Path(fn)}`
-        try {
-          const buf = await download(url)
-          if (buf.length < 5000) throw new Error('too-small')
-          fs.writeFileSync(target, buf)
-          index[`${id}_${kind}`] = `${id}_${kind}.png`
-          downloaded++
-        } catch (e) {
-          failed++
-          if (src.file === EGO_DATA) console.log(`[art] EGO ${id} ${kind} 缺失: ${e.message}`)
-          else if (kind === 'normal') console.log(`[art] ${id} normal 缺失: ${e.message}`)
-        }
-      }
-      if (grandTotal > 40 && (downloaded + failed) % 25 === 0) {
-        console.log(`[art] 进度 ${downloaded + failed}/${grandTotal}`)
+        tasks.push({ id, kind, src, fn, target })
       }
     }
   }
+  const need = tasks.length
+
+  // 小并发池下载（默认 6 并发），显著缩短首次几百张的下载时长
+  const CONCURRENCY = 6
+  let cursor = 0
+  let reported = 0
+  const worker = async () => {
+    while (cursor < tasks.length) {
+      const t = tasks[cursor++]
+      try {
+        const url = `https://${HOST}${BASE}/${md5Path(t.fn)}`
+        const buf = await download(url)
+        if (buf.length < 5000) throw new Error('too-small')
+        fs.writeFileSync(t.target, buf)
+        index[`${t.id}_${t.kind}`] = `${t.id}_${t.kind}.png`
+        downloaded++
+      } catch (e) {
+        failed++
+        if (t.src.file === EGO_DATA) console.log(`[art] EGO ${t.id} ${t.kind} 缺失: ${e.message}`)
+        else if (t.kind === 'normal') console.log(`[art] ${t.id} normal 缺失: ${e.message}`)
+      }
+      reported++
+      if (grandTotal > 40 && reported % 25 === 0) console.log(`[art] 进度 ${reported}/${grandTotal}`)
+    }
+  }
+  const workers = Array.from({ length: Math.min(CONCURRENCY, Math.max(1, need)) }, () => worker())
+  await Promise.all(workers)
 
   fs.writeFileSync(INDEX, JSON.stringify(index))
-  console.log(`[art] 完成: 下载 ${downloaded}, 已有 ${existed}, 失败 ${failed}, 耗时 ${((Date.now() - t0) / 1000).toFixed(1)}s`)
+  console.log(`[art] 完成: 需下载 ${need}, 已下载 ${downloaded}, 已有 ${existed}, 失败 ${failed}, 耗时 ${((Date.now() - t0) / 1000).toFixed(1)}s`)
   return { downloaded, failed }
 }
 
