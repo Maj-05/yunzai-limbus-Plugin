@@ -20,7 +20,8 @@ export class LimbusTool extends plugin {
         { reg: `^${rulePrefix}随机(?:ego|EGO)\\s*$`, fnc: 'randomEgo' },
         { reg: `^${rulePrefix}(?:罪人总览|罪人)$`, fnc: 'sinnerOverview' },
         { reg: `^${rulePrefix}(?:流派)\\s*(.*)$`, fnc: 'flowInfo' },
-        { reg: `^${rulePrefix}(?:配队|队伍)\\s*(.*)$`, fnc: 'teamInfo' }
+        { reg: `^${rulePrefix}(?:配队|队伍)\\s*(.*)$`, fnc: 'teamInfo' },
+        { reg: `^${rulePrefix}抽卡(?:\\s+(.*))?$`, fnc: 'gacha' }
       ]
     })
   }
@@ -153,6 +154,83 @@ export class LimbusTool extends plugin {
     body.push(`配饰用法：#流派 ${f.name}；详情：#人格 <名称> / #ego <名称>`)
     await this.reply(body.join('\n'))
     return true
+  }
+
+  /** 抽卡模拟：#抽卡 单抽 / #抽卡 十连 */
+  async gacha() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const arg = this._stripKw(this.e.msg, '抽卡').trim()
+    const isMulti = /(十连|10|十抽|mult)/i.test(arg)
+    const n = isMulti ? 10 : 1
+    const results = Array.from({ length: n }, () => this._rollOnce())
+    // 单抽：渲染一张大卡
+    if (n === 1) {
+      const r = results[0]
+      if (r.kind === 'personality') {
+        const card = buildPersonalityCard(r.id)
+        if (card) { await runtimeRender(this.e, 'personality/personality', { card }, { scale: 1.4 }); return true }
+      } else {
+        const card = buildEgoCard(r.id)
+        if (card) { await runtimeRender(this.e, 'ego/ego', { card }, { scale: 1.4 }); return true }
+      }
+      // 渲染失败则回退文本
+      await this.reply(`【抽卡】${this._gachaLabel(r)}：${r.name}`)
+      return true
+    }
+    // 十连：文本列表
+    const lines = results.map((r, i) => `${String(i + 1).padStart(2)}. ${this._gachaLabel(r)} · ${r.name}`)
+    const rare = results.filter(r => r.rarity <= 2).length
+    await this.reply(`【抽卡·十连】\n${lines.join('\n')}\n\n稀有出卡 ${rare} 张`)
+    return true
+  }
+
+  /** 单次抽取：按稀有度概率抽一个人格或 EGO */
+  _rollOnce() {
+    // 概率模型：人格 3灯/2灯/1灯 + EGO WAW/HE/TETH/ZAYIN
+    // rarity: 数值越小越稀有（1=3灯人格, 2=WAW, 3=2灯/HE, 4=TETH, 5=1灯/ZAYIN）
+    const roll = Math.random() * 100
+    if (roll < 3) { // 人格 3灯（最稀有）
+      const pool = db.personalities.filter(p => (p.rank ?? 0) >= 3)
+      return this._pick(pool, 'personality', 1)
+    } else if (roll < 15) { // 人格 2灯
+      const pool = db.personalities.filter(p => (p.rank ?? 0) === 2)
+      return this._pick(pool, 'personality', 3)
+    } else if (roll < 62) { // 人格 1灯
+      const pool = db.personalities.filter(p => (p.rank ?? 0) === 1)
+      return this._pick(pool, 'personality', 5)
+    } else if (roll < 65) { // EGO WAW
+      const pool = db.egos.filter(g => g.grade === 'WAW')
+      return this._pick(pool, 'ego', 2)
+    } else if (roll < 76) { // EGO HE
+      const pool = db.egos.filter(g => g.grade === 'HE')
+      return this._pick(pool, 'ego', 3)
+    } else if (roll < 86) { // EGO TETH
+      const pool = db.egos.filter(g => g.grade === 'TETH')
+      return this._pick(pool, 'ego', 4)
+    } else { // EGO ZAYIN
+      const pool = db.egos.filter(g => g.grade === 'ZAYIN')
+      return this._pick(pool, 'ego', 5)
+    }
+  }
+
+  _pick(pool, kind, rarity) {
+    if (!pool.length) return this._rollOnce()
+    const it = pool[Math.floor(Math.random() * pool.length)]
+    const isEgo = kind === 'ego'
+    return {
+      kind,
+      id: it.id,
+      name: it.name,
+      rank: it.rank,           // 人格用
+      grade: it.grade,         // EGO用
+      rarity,                  // 稀有度等级(越小越稀有)
+      label: isEgo ? it.grade : `第${it.rank}星`
+    }
+  }
+
+  _gachaLabel(r) {
+    if (r.kind === 'ego') return `E.G.O·${r.grade}`
+    return `人格·第${r.rank}星`
   }
 }
 
