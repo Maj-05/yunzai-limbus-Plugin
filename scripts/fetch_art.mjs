@@ -18,7 +18,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PLUGIN_ROOT = path.resolve(__dirname, '..')
 const DATA = path.join(PLUGIN_ROOT, 'resources', 'data', 'personalities.json')
 const EGO_DATA = path.join(PLUGIN_ROOT, 'resources', 'data', 'egos.json')
-const GIFT_DATA = path.join(PLUGIN_ROOT, 'resources', 'data', 'egogifts.json')
 const OUT_DIR = path.join(PLUGIN_ROOT, 'resources', 'art')
 const INDEX = path.join(OUT_DIR, 'art_index.json')
 
@@ -74,11 +73,11 @@ export async function build () {
   let existed = 0
   const t0 = Date.now()
 
-  // 人格 + EGO 立绘都本地缓存（人格 normal/gacksung，EGO normal）
+  // 人格 + EGO 立绘本地缓存（人格 normal/gacksung，EGO awaken_profile）。
+  // 饰品立绘灰机wiki无 {id}_normal.png 文件（全404），故不下载，饰品卡用文字/图标兜底。
   const sources = [
     { file: DATA, kinds: ['normal', 'gacksung'], total: 0 },
-    { file: EGO_DATA, kinds: ['awaken_profile'], total: 0 },
-    { file: GIFT_DATA, kinds: ['normal'], total: 0 }
+    { file: EGO_DATA, kinds: ['awaken_profile'], total: 0 }
   ]
 
   // 收集全部待下载任务（已存在本地的跳过，记入 existed）
