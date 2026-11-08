@@ -18,7 +18,8 @@ export class LimbusTool extends plugin {
         { reg: `^${rulePrefix}(?:状态|机制|效果)\\s*(.+)$`, fnc: 'queryStatus' },
         { reg: `^${rulePrefix}随机(?:人格|身份)\\s*$`, fnc: 'randomPersonality' },
         { reg: `^${rulePrefix}随机(?:ego|EGO)\\s*$`, fnc: 'randomEgo' },
-        { reg: `^${rulePrefix}(?:罪人总览|罪人)$`, fnc: 'sinnerOverview' }
+        { reg: `^${rulePrefix}(?:罪人总览|罪人)$`, fnc: 'sinnerOverview' },
+        { reg: `^${rulePrefix}(?:流派)\\s*(.*)$`, fnc: 'flowInfo' }
       ]
     })
   }
@@ -87,12 +88,50 @@ export class LimbusTool extends plugin {
     await this.reply(`【十二罪人】\n${lines.join('\n')}\n\n用法：#人格 <罪人名> 看人格列表，如 #人格 良秀`)
     return true
   }
+
+  /** #流派 <流派名>：镜牢饰品流派推荐（按效果文本关键词归类） */
+  async flowInfo() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const q = this._stripKw(this.e.msg, '流派')
+    const flows = readFlowData()
+    if (!flows || !flows.length) { await this.reply('流派数据未就绪'); return true }
+    // 无参数 → 列所有流派
+    if (!q) {
+      const lines = flows.map(f => `· ${f.name}：${f.desc}`)
+      await this.reply(`【镜牢流派】\n${lines.join('\n')}\n\n用法：#流派 <流派名>，如 #流派 烧伤 / 震颤 / 流血`)
+      return true
+    }
+    // 有参数 → 找流派，扫描饰品
+    const f = flows.find(x => x.name === q || x.key === q)
+    if (!f) {
+      const names = flows.map(x => x.name).join(' / ')
+      await this.reply(`没有「${q}」这个流派。\n可用流派：${names}`)
+      return true
+    }
+    const kws = f.keywords || [f.name]
+    const gifts = db.egogifts.filter(g =>
+      (g.effects || []).some(x => kws.some(kw => (x.text || '').includes(kw)))
+    )
+    const lines = gifts.slice(0, 10).map(g => `· ${g.name}`)
+    const more = gifts.length > 10 ? `\n…等 ${gifts.length} 件饰品` : ''
+    await this.reply(`【${f.name}流】\n${f.desc}\n\n推荐饰品（前10）：\n${lines.join('\n')}${more}\n\n用法：#饰品 <名称> 查看具体效果`)
+    return true
+  }
 }
 
 /** 读取状态文案（resources/data/statuses.json，手工维护的静态数据） */
 function readStatusData() {
   try {
     return readData('statuses') || []
+  } catch {
+    return []
+  }
+}
+
+/** 读取流派数据（resources/data/flows.json，手工维护的静态数据） */
+function readFlowData() {
+  try {
+    return readData('flows') || []
   } catch {
     return []
   }

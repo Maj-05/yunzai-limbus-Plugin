@@ -20,7 +20,8 @@ const helpList = [
       { icon: 13, title: '#罪人', desc: '十二罪人总览：人格 / E.G.O 数量' },
       { icon: 14, title: '#随机人格 / #随机ego', desc: '随机展示一张人格或 E.G.O 卡' },
       { icon: 15, title: '#人格 <罪人> N灯', desc: '按稀有度过滤，例:#人格 良秀 3灯' },
-      { icon: 20, title: '#ego <罪人> <等级>', desc: '按 E.G.O 等级过滤，例:#ego 良秀 WAW' }
+      { icon: 20, title: '#ego <罪人> <等级>', desc: '按 E.G.O 等级过滤，例:#ego 良秀 WAW' },
+      { icon: 21, title: '#流派 <流派名>', desc: '镜牢饰品流派推荐，例:#流派 烧伤 / 震颤 / 流血' }
     ]
   }, {
     group: '帮助与数据',
