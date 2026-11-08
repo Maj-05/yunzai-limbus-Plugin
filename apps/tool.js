@@ -19,7 +19,8 @@ export class LimbusTool extends plugin {
         { reg: `^${rulePrefix}随机(?:人格|身份)\\s*$`, fnc: 'randomPersonality' },
         { reg: `^${rulePrefix}随机(?:ego|EGO)\\s*$`, fnc: 'randomEgo' },
         { reg: `^${rulePrefix}(?:罪人总览|罪人)$`, fnc: 'sinnerOverview' },
-        { reg: `^${rulePrefix}(?:流派)\\s*(.*)$`, fnc: 'flowInfo' }
+        { reg: `^${rulePrefix}(?:流派)\\s*(.*)$`, fnc: 'flowInfo' },
+        { reg: `^${rulePrefix}(?:配队|队伍)\\s*(.*)$`, fnc: 'teamInfo' }
       ]
     })
   }
@@ -115,6 +116,42 @@ export class LimbusTool extends plugin {
     const lines = gifts.slice(0, 10).map(g => `· ${g.name}`)
     const more = gifts.length > 10 ? `\n…等 ${gifts.length} 件饰品` : ''
     await this.reply(`【${f.name}流】\n${f.desc}\n\n推荐饰品（前10）：\n${lines.join('\n')}${more}\n\n用法：#饰品 <名称> 查看具体效果`)
+    return true
+  }
+
+  /** #配队 <流派名>：推荐该流派的配队（人格 + EGO） */
+  async teamInfo() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const q = this._stripKw(this.e.msg, '配队|队伍')
+    const flows = readFlowData()
+    if (!flows || !flows.length) { await this.reply('流派数据未就绪'); return true }
+    if (!q) {
+      const lines = flows.map(f => `· ${f.name}`)
+      await this.reply(`【可配队流派】\n${lines.join('\n')}\n\n用法：#配队 <流派名>，如 #配队 破裂 / 烧伤 / 流血`)
+      return true
+    }
+    const f = flows.find(x => x.name === q || x.key === q)
+    if (!f) {
+      const names = flows.map(x => x.name).join(' / ')
+      await this.reply(`没有「${q}」这个流派。\n可用流派：${names}`)
+      return true
+    }
+    const kws = f.keywords || [f.name]
+    const kwHit = (txt) => kws.some(kw => (txt || '').includes(kw))
+    // 按被动文本扫人格
+    const pers = db.personalities.filter(p =>
+      (p.passives || []).some(pv => kwHit(db.passiveText(pv.id)?.desc))
+    ).slice(0, 8).map(p => p.name)
+    // 按觉醒/侵蚀技能文本扫 EGO
+    const egos = db.egos.filter(g =>
+      kwHit(db.skillText(g.awakenSkillId)?.desc) || kwHit(db.skillText(g.corrodeSkillId)?.desc)
+    ).slice(0, 8).map(g => g.name)
+    const body = []
+    body.push(`【${f.name}流配队】`)
+    body.push(pers.length ? `推荐人格：\n${pers.map(n => '· ' + n).join('\n')}` : '推荐人格：无（该流派人格数据未收录）')
+    body.push(egos.length ? `推荐E.G.O：\n${egos.map(n => '· ' + n).join('\n')}` : '推荐E.G.O：无')
+    body.push(`配饰用法：#流派 ${f.name}；详情：#人格 <名称> / #ego <名称>`)
+    await this.reply(body.join('\n'))
     return true
   }
 }
