@@ -15,7 +15,12 @@ const helpList = [
       { icon: 7, title: '#饰品列表 [级别]', desc: '饰品按级别概览 / 指定级别，例:#饰品列表 1' },
       { icon: 8, title: '#人格 10201 / #ego 20307', desc: '直接按 ID 查询' },
       { icon: 9, title: '回复 1-8', desc: '多命中时回复序号直接选中' },
-      { icon: 11, title: '#敌人 类型', desc: '按类型筛选：异常体/部位/人类/头目，详列见 #敌人帮助' }
+      { icon: 11, title: '#敌人 类型', desc: '按类型筛选：异常体/部位/人类/头目，详列见 #敌人帮助' },
+      { icon: 12, title: '#状态 <状态名>', desc: '速查异常状态机制，例:#状态 破裂 / 烧伤 / 震颤' },
+      { icon: 13, title: '#罪人', desc: '十二罪人总览：人格 / E.G.O 数量' },
+      { icon: 14, title: '#随机人格 / #随机ego', desc: '随机展示一张人格或 E.G.O 卡' },
+      { icon: 15, title: '#人格 <罪人> N灯', desc: '按稀有度过滤，例:#人格 良秀 3灯' },
+      { icon: 20, title: '#ego <罪人> <等级>', desc: '按 E.G.O 等级过滤，例:#ego 良秀 WAW' }
     ]
   }, {
     group: '帮助与数据',
@@ -38,6 +43,7 @@ const CATEGORY_HELP = {
       { title: '#人格 罪人名', desc: '列出该罪人全部人格，例「#人格 良秀」' },
       { title: '#人格 浮 / 希 / 梅尔', desc: '罪人简称也能搜，如浮=浮士德、希=希斯克利夫' },
       { title: '#人格 兔子 / 驯鹿 / 犀牛', desc: '按R公司称号搜索（兔希=希斯克利夫R公司兔子队）' },
+      { title: '#人格 <罪人> N灯', desc: '按稀有度过滤，例「#人格 良秀 3灯」' },
       { title: '记不住全名？', desc: '输入任意连续片段即可，如「#人格 深郁」' }
     ]
   },
@@ -61,6 +67,7 @@ const CATEGORY_HELP = {
     list: [
       { title: '#ego 名称', desc: '按E.G.O名称搜索，如「#ego 深沉的悲伤」' },
       { title: '#ego 罪人名', desc: '列出该罪人全部 E.G.O，例「#ego 良秀」' },
+      { title: '#ego <罪人> <等级>', desc: '按等级过滤，例「#ego 良秀 WAW」(ZAYIN/TETH/HE/WAW/ALEPH)' },
       { title: '#ego 片段', desc: '记不全时输入部分文字即可命中' }
     ]
   }
