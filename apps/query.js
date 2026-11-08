@@ -2,7 +2,7 @@ import db from '../lib/db.mjs'
 import { rulePrefix } from '../utils/common.js'
 import runtimeRender from '../utils/runtimeRender.js'
 import { buildEgoCard, buildEnemyCard, buildGiftCard, buildGiftList, buildSinnerEgoList, suggestions } from '../lib/cards.mjs'
-import { rememberSelect, peekSelect, clearSelect } from '../lib/selection.mjs'
+import { rememberSelect, peekSelect, clearSelect, updatePage } from '../lib/selection.mjs'
 
 export class LimbusQuery2 extends plugin {
   constructor() {
@@ -17,6 +17,9 @@ export class LimbusQuery2 extends plugin {
         { reg: `^${rulePrefix}(?:饰品|egogift)(?:列表|list|全部)\s*(\\d{0,2})$`, fnc: 'giftList' },
         { reg: `^${rulePrefix}(?:饰品|egogift|EGO饰品)\\s*(.+)$`, fnc: 'queryGift' },
         { reg: '^#?[1-8]$', fnc: 'selectNumber' },
+        { reg: '^#?(?:下一页|下页)$', fnc: 'turnPage' },
+        { reg: '^#?(?:上一页|上页)$', fnc: 'turnPage' },
+        { reg: '^#?第(\\d{1,3})页$', fnc: 'turnPage' },
         { reg: `^${rulePrefix}图鉴状态$`, fnc: 'status' }
       ]
     })
@@ -96,18 +99,21 @@ export class LimbusQuery2 extends plugin {
       await this.reply('图鉴数据未就绪，请联系管理员运行数据构建')
       return true
     }
-    // 类型筛选：#敌人 异常体 / #敌人 部位 / #敌人 人类 / #敌人 头目 等
+    // 类型筛选：#敌人 异常体 / #敌人 部位 / #敌人 人类 / #敌人 头目 等（支持分页）
     const tkw = db.enemyTypeKeyword(q)
     if (tkw) {
       const ids = db.enemiesOfType(tkw.type)
       if (!ids.length) { await this.reply(`没有「${tkw.label}」类型的敌人`); return true }
-      // 数量大时只列前一批，避免刷屏；序号可直接选后续由 selectNumber 处理
-      const shown = ids.slice(0, 8)
-      rememberSelect(this.e.user_id, { ids, kindName: '敌人', render: buildEnemyCard, tpl: 'enemy/enemy' })
+      const PAGE = 8
+      const page = 0
+      const totalPages = Math.max(1, Math.ceil(ids.length / PAGE))
+      const shown = ids.slice(page * PAGE, page * PAGE + PAGE)
+      rememberSelect(this.e.user_id, { ids, kindName: '敌人', render: buildEnemyCard, tpl: 'enemy/enemy', page, pageSize: PAGE })
       await runtimeRender(this.e, 'search/search', {
         kind: `敌人·${tkw.label}`,
-        keyword: `${tkw.label}（共 ${ids.length} 个）`,
-        results: suggestions(shown, 'enemy')
+        keyword: `${tkw.label}（共 ${ids.length} 个，第 ${page + 1}/${totalPages} 页）`,
+        results: suggestions(shown, 'enemy'),
+        page: { cur: page + 1, total: totalPages }
       }, { scale: 1.4 })
       return true
     }
@@ -171,12 +177,47 @@ export class LimbusQuery2 extends plugin {
     const sel = peekSelect(this.e.user_id)
     if (!sel) return false
     if (!db.load()) return false
-    const id = sel.ids[n - 1]
-    if (id == null) { await this.reply('序号超出范围（1-' + sel.ids.length + '）'); return true }
+    // 分页时序号按当前页偏移选取（ids 已是全量，页内 1-8 对应 page*pageSize+n）
+    const pageSize = sel.pageSize || sel.ids.length
+    const offset = (sel.page || 0) * pageSize
+    const id = sel.ids[offset + n - 1]
+    if (id == null) { await this.reply('序号超出范围（1-' + Math.min(pageSize, sel.ids.length - offset) + '）'); return true }
     const card = sel.render(id)
     if (!card) { await this.reply('数据缺失，请联系管理员更新图鉴'); clearSelect(this.e.user_id); return true }
     clearSelect(this.e.user_id)
     await runtimeRender(this.e, sel.tpl, { card }, { scale: 1.4 })
+    return true
+  }
+
+  /** 翻页：#下一页 / #上一页 / #第N页 */
+  async turnPage() {
+    const msg = this.e.msg.replace(/#/g, '').trim()
+    if (!db.load()) return false
+    const sel = peekSelect(this.e.user_id)
+    if (!sel) return false
+    const pageSize = sel.pageSize || 8
+    const totalPages = Math.max(1, Math.ceil(sel.ids.length / pageSize))
+    const m = msg.match(/^第(\d{1,3})页$/)
+    let nextPage
+    if (m) {
+      nextPage = Number(m[1]) - 1
+    } else if (/上[一页]/.test(msg)) {
+      nextPage = (sel.page || 0) - 1
+    } else { // 下一页/下页
+      nextPage = (sel.page || 0) + 1
+    }
+    if (nextPage < 0) nextPage = 0
+    if (nextPage >= totalPages) nextPage = totalPages - 1
+    const page = updatePage(this.e.user_id, () => nextPage)
+    if (page == null) return false
+    const shown = sel.ids.slice(page * pageSize, page * pageSize + pageSize)
+    if (!shown.length) { await this.reply('该页无内容'); return true }
+    await runtimeRender(this.e, 'search/search', {
+      kind: sel.kindName,
+      keyword: `${sel.kindName}（第 ${page + 1}/${totalPages} 页）`,
+      results: suggestions(shown, sel.kindName === '敌人' ? 'enemy' : ''),
+      page: { cur: page + 1, total: totalPages }
+    }, { scale: 1.4 })
     return true
   }
 }

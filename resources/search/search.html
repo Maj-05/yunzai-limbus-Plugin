@@ -7,7 +7,11 @@
 {{block 'main'}}
 <div class="head-box">
   <div class="title">「{{keyword}}」的搜索结果</div>
+  {{if page}}
+  <div class="label">第 {{page.cur}}/{{page.total}} 页 · 回复序号 1-{{results.length}} 查看，或「下一页 / 上一页 / 第N页」翻页</div>
+  {{else}}
   <div class="label">找到 {{results.length}} 条 {{kind}} 记录 · 回复序号 1-{{results.length}} 直接选择，或输入更精确名称</div>
+  {{/if}}
 </div>
 
 <div class="card">
@@ -19,6 +23,10 @@
   </div>
   {{/each}}
 </div>
+
+{{if page && page.total > 1}}
+<div class="label" style="margin-top:8px">回复「下一页 / 上一页 / 第N页」翻页浏览更多</div>
+{{/if}}
 
 <div class="copyright">{{@sys.copyright}}</div>
 {{/block}}
