@@ -191,7 +191,8 @@ export class LimbusUpdate extends plugin {
 
       await this.reply(
         `边狱图鉴更新完成 ✓\n人格: ${result.personalities}\nE.G.O: ${result.egos}\n敌人: ${result.enemies}\n饰品: ${result.egogifts}` +
-        artLine
+        artLine +
+        (result.diag && result.diag.length ? `\n\n⚠ 数据完整性提示：\n${result.diag.map(d => '· ' + d).join('\n')}` : '')
       )
     } catch (err) {
       logger.error(`[limbus-plugin] 更新失败: ${err.stack || err.message}`)

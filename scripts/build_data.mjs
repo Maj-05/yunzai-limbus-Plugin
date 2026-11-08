@@ -326,11 +326,23 @@ export async function buildAll (upstreamDir, outDir) {
   out('passives', passives)
   out('meta', { builtAt: new Date().toISOString(), sourceVersion: new Date().toISOString().slice(0, 10) })
 
+  // ===== 数据完整性诊断（便于一眼看出哪些上游数据缺失）=====
+  const diag = []
+  if (!enemies.length) diag.push('敌人为空（缺 LocalizeLimbusCompany/Enemies.json）')
+  const enemiesNoResist = enemies.filter(e => !(e.resist || []).length).length
+  if (enemiesNoResist === enemies.length) diag.push('敌人抗性全空（缺 LimbusStaticData/abnormality-unit 数值源）')
+  const enemiesNoSkill = enemies.filter(e => !(e.skills || []).length).length
+  if (enemiesNoSkill > 0) diag.push(`${enemiesNoSkill}/${enemies.length} 敌人无技能数据（缺 abnormality-unit 数值源）`)
+  const giftRarityZero = egogifts.filter(g => (g.rarity ?? 0) === 0).length
+  if (giftRarityZero === egogifts.length && egogifts.length) diag.push('饰品级别全为1（缺 LimbusStaticData/ego-gift-mirrordungeon 稀有度数据）')
+  if (!Object.keys(skills).length) diag.push('技能文本为空（缺 LocalizeLimbusCompany/Skills*.json）')
+
   return {
     personalities: personalities.length,
     egos: egos.length,
     enemies: enemies.length,
-    egogifts: egogifts.length
+    egogifts: egogifts.length,
+    diag
   }
 }
 
