@@ -105,19 +105,19 @@ export class LimbusUpdate extends plugin {
     this._running = true
     const onlyData = this.e.msg.includes('数据')
     try {
-      // ============ 阶段1：插件自更新（git pull）============
+      // ============ 阶段1：插件自更新（git pull，失败兜底全量覆盖）============
       if (!onlyData) {
         await this.reply('①/② 正在拉取插件最新代码…')
+        let updated = false
         if (this._isGitRepo()) {
           const isForce = this.e.msg.includes('强制')
-          // 记录更新前 commit，用于展示更新日志
           const oldCommit = await this._execGit('rev-parse --short HEAD')
           let cmd = isForce
             ? 'git -C "' + PLUGIN_ROOT + '" fetch --all && git -C "' + PLUGIN_ROOT + '" reset --hard HEAD'
             : 'git -C "' + PLUGIN_ROOT + '" pull --no-rebase'
           let ret = await execAsync(cmd, { timeout: 180000, windowsHide: true }).catch(err => ({ stdout: '', stderr: err.message }))
           // 直连失败则走 ghMirror 代理重试
-          if (/Failed to connect|unable to access|Timed out|Could not/i.test(ret.stdout || '') + String(ret.stderr || '')) {
+          if (/Failed to connect|unable to access|Timed out|Could not|fatal/i.test(ret.stdout || '') + String(ret.stderr || '')) {
             const mir = ghMirrorOf(REPO_URL)
             await this.reply('直连 GitHub 失败，改用代理镜像重试…')
             ret = await execAsync(`git -C "${PLUGIN_ROOT}" pull --no-rebase "${mir}" HEAD`, { timeout: 180000, windowsHide: true })
@@ -126,41 +126,24 @@ export class LimbusUpdate extends plugin {
           const stdout = (ret.stdout || '') + (ret.stderr || '')
           if (/Already up.to date|已经是最新/i.test(stdout)) {
             await this.reply('插件代码已是最新')
+            updated = true
+          } else if (/fatal|error|Could not|Failed to connect/i.test(stdout)) {
+            // git 更新失败 → 兜底全量覆盖，保证完整更新
+            updated = await this._cloneCopyUpdate()
+            if (!updated) await this.reply(`git 更新失败，改用全量覆盖也失败:\n${stdout.trim().slice(0, 300)}`)
           } else {
             await this.reply(`代码已更新（${isForce ? '强制' : '常规'}）\n${stdout.trim().split('\n').slice(-6).join('\n').slice(0, 400)}`)
-            // 显示更新日志
             const log = await this._gitLog(oldCommit)
             if (log) await this.reply(log.slice(0, 600))
+            updated = true
           }
         } else {
-          // 第三方面板安装（无 .git）：用 git 临时 clone 拉取最新代码覆盖（保留 data/upstream 与 resources/art）
-          try {
-            const tmp = path.join(PLUGIN_ROOT, '..', `.limbus-update-${Date.now()}`)
-            fs.rmSync(tmp, { recursive: true, force: true })
-            await execAsync(`git clone --depth 1 ${ghMirrorOf(REPO_URL)} "${tmp}"`, { timeout: 300000, windowsHide: true })
-            // 复制代码文件（保留本地的 data/upstream、resources/art、node_modules）
-            for (const item of fs.readdirSync(tmp)) {
-              if (['data', 'resources', 'node_modules', '.git'].includes(item)) continue
-              const src = path.join(tmp, item)
-              const dst = path.join(PLUGIN_ROOT, item)
-              fs.rmSync(dst, { recursive: true, force: true })
-              fs.cpSync(src, dst, { recursive: true })
-            }
-            // resources 下只覆盖代码/模板，保留 art 缓存
-            for (const sub of ['common', 'personality', 'ego', 'enemy', 'gift', 'search', 'help', 'data']) {
-              const rsrc = path.join(PLUGIN_ROOT, 'resources', sub)
-              const rtmp = path.join(tmp, 'resources', sub)
-              if (fs.existsSync(rtmp)) {
-                fs.rmSync(rsrc, { recursive: true, force: true })
-                fs.cpSync(rtmp, rsrc, { recursive: true })
-              }
-            }
-            fs.rmSync(tmp, { recursive: true, force: true })
-            await this.reply('代码已更新（面板安装模式：拉取最新代码覆盖完成）')
-          } catch (e) {
-            logger.error(`[limbus-plugin] 面板自更新失败: ${e.message}`)
-            await this.reply(`⚠ 面板自更新失败: ${e.message.slice(0, 40)}\n不影响数据更新`)
-          }
+          // 第三方面板安装（无 .git）：全量 clone 覆盖
+          updated = await this._cloneCopyUpdate()
+        }
+        if (!updated) {
+          // git 与全量覆盖都失败，提示用户
+          await this.reply('插件自更新未完成（网络或 git 问题），可改用 Yunzai 的「更新全部插件」。\n不影响下方数据更新。')
         }
       } else {
         await this.reply('①/② 跳过插件自更新（仅更新数据）')
@@ -217,6 +200,37 @@ export class LimbusUpdate extends plugin {
       this._running = false
     }
     return true
+  }
+
+  /** 全量覆盖更新：git clone 最新代码到临时目录并覆盖本插件（保留 data/upstream、resources/art、node_modules） */
+  async _cloneCopyUpdate () {
+    const tmp = path.join(PLUGIN_ROOT, '..', `.limbus-update-${Date.now()}`)
+    try {
+      fs.rmSync(tmp, { recursive: true, force: true })
+      await execAsync(`git clone --depth 1 ${ghMirrorOf(REPO_URL)} "${tmp}"`, { timeout: 300000, windowsHide: true })
+      for (const item of fs.readdirSync(tmp)) {
+        if (['data', 'resources', 'node_modules', '.git'].includes(item)) continue
+        const src = path.join(tmp, item)
+        const dst = path.join(PLUGIN_ROOT, item)
+        fs.rmSync(dst, { recursive: true, force: true })
+        fs.cpSync(src, dst, { recursive: true })
+      }
+      for (const sub of ['common', 'personality', 'ego', 'enemy', 'gift', 'search', 'help', 'data']) {
+        const rsrc = path.join(PLUGIN_ROOT, 'resources', sub)
+        const rtmp = path.join(tmp, 'resources', sub)
+        if (fs.existsSync(rtmp)) {
+          fs.rmSync(rsrc, { recursive: true, force: true })
+          fs.cpSync(rtmp, rsrc, { recursive: true })
+        }
+      }
+      fs.rmSync(tmp, { recursive: true, force: true })
+      await this.reply('代码已更新（全量覆盖完成）')
+      return true
+    } catch (e) {
+      logger.error(`[limbus-plugin] 全量覆盖更新失败: ${e.message}`)
+      fs.rmSync(tmp, { recursive: true, force: true })
+      return false
+    }
   }
 
   _execGit (args) {
