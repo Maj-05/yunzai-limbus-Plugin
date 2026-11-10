@@ -19,8 +19,7 @@ export class LimbusQuery2 extends plugin {
         { reg: '^#?[1-8]$', fnc: 'selectNumber' },
         { reg: '^#?(?:下一页|下页)$', fnc: 'turnPage' },
         { reg: '^#?(?:上一页|上页)$', fnc: 'turnPage' },
-        { reg: '^#?第(\\d{1,3})页$', fnc: 'turnPage' },
-        { reg: `^${rulePrefix}图鉴状态$`, fnc: 'status' }
+        { reg: '^#?第(\\d{1,3})页$', fnc: 'turnPage' }
       ]
     })
   }

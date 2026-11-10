@@ -245,7 +245,6 @@ export class LimbusTool extends plugin {
   async catalogEnemy() {
     if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
     const q = this._stripKw(this.e.msg, '敌图鉴').trim()
-    const TYPE_LABEL = { abno: '异常体', part: '部位', human: '人类', human_boss: '头目' }
     if (q) {
       const tkw = db.enemyTypeKeyword(q)
       if (tkw) {
@@ -369,21 +368,7 @@ export class LimbusTool extends plugin {
     const isMulti = /(十连|10|十抽|mult)/i.test(arg)
     const n = isMulti ? 10 : 1
     const results = Array.from({ length: n }, () => this._rollOnce())
-    // 单抽：渲染一张大卡
-    if (n === 1) {
-      const r = results[0]
-      if (r.kind === 'personality') {
-        const card = buildPersonalityCard(r.id)
-        if (card) { await runtimeRender(this.e, 'personality/personality', { card }, { scale: 1.4 }); return true }
-      } else {
-        const card = buildEgoCard(r.id)
-        if (card) { await runtimeRender(this.e, 'ego/ego', { card }, { scale: 1.4 }); return true }
-      }
-      // 渲染失败则回退文本
-      await this.reply(`【抽卡】${this._gachaLabel(r)}：${r.name}`)
-      return true
-    }
-    // 十连：图片卡片墙
+    // 单抽/十连统一走 gacha 卡片模板（单抽即 1 张大卡），风格一致
     const cards = results.map(r => {
       if (r.kind === 'shard') return { art: '', name: r.name || '人格碎片', rarityName: '碎片', rarityColor: '#a8a8a8', isRare: false, isShard: true }
       const art = r.kind === 'ego' ? artUrl(r.id, 'awaken_profile') : artUrl(r.id, 'normal')
@@ -391,10 +376,16 @@ export class LimbusTool extends plugin {
       const SIN_COLOR = { WRATH:'#d8433c', LUST:'#8a5a33', SLOTH:'#e2c23a', GLUTTONY:'#4caf50', GLOOM:'#6fb3e8', PRIDE:'#2b3d8f', ENVY:'#9b5bb8', CRIMSON:'#d8433c', AMBER:'#8a5a33', SCARLET:'#e2c23a', SHAMROCK:'#4caf50', AZURE:'#6fb3e8', INDIGO:'#2b3d8f', VIOLET:'#9b5bb8', NEUTRAL:'#888' }
       let color
       if (r.kind === 'ego') {
-        // EGO 边框按主罪孽属性（cost 第一个属性）
+        // EGO 边框按主罪孽属性：取 cost 中数量最多的属性，数量并列取首个（更贴近 EGO 身份色）
         const g = db.getEgo(r.id)
-        const sin = g && g.cost && g.cost[0] ? g.cost[0].sin : ''
-        color = SIN_COLOR[sin] || '#9b5bb8'
+        const cost = (g && g.cost) ? g.cost : []
+        let mainSin = ''
+        let mainNum = -1
+        for (const c of cost) {
+          const num = Number(c.num) || 0
+          if (num > mainNum) { mainNum = num; mainSin = c.sin }
+        }
+        color = SIN_COLOR[mainSin] || '#9b5bb8'
       } else {
         // 人格边框按灯数（官方：3灯金 #FFD700 / 2灯红 #DC143C / 1灯灰 #A9A9A9）
         color = { 3: '#ffd700', 2: '#dc143c', 1: '#a9a9a9' }[r.rank] || '#a9a9a9'
@@ -402,7 +393,7 @@ export class LimbusTool extends plugin {
       return { art, name: r.name, rarityName: rar, rarityColor: color, isRare: r.rarity <= 2 }
     })
     const rare = results.filter(r => r.rarity <= 2).length
-    await runtimeRender(this.e, 'search/gacha', { results: cards, rareCount: rare, gachaMulti: true }, { scale: 1.4 })
+    await runtimeRender(this.e, 'search/gacha', { results: cards, rareCount: rare, gachaMulti: n > 1 }, { scale: 1.4 })
     return true
   }
 
@@ -496,7 +487,9 @@ export class LimbusTool extends plugin {
       const pool = db.personalities.filter(p => (p.rank ?? 0) === 2)
       return this._pick(pool, 'personality', 3)
     } else if (roll < 91) { // 人格碎片（1灯初始人格不可抽，全部为碎片）
-      return { kind: 'shard', id: 0, name: '人格碎片', rank: 0, rarity: 5 }
+      const shardKinds = ['人格碎片', '人格碎片', '人格碎片', '人格碎片', '十连券碎片']
+      const shardNames = ['李箱', '浮士德', '堂吉诃德', '良秀', '默尔索', '鸿璐', '希斯克利夫', '以实玛利', '罗佳', '辛克莱', '奥提斯', '格里高尔']
+      return { kind: 'shard', id: 0, name: `${shardNames[Math.floor(Math.random() * shardNames.length)]}·${shardKinds[Math.floor(Math.random() * shardKinds.length)]} ×${1 + Math.floor(Math.random() * 15)}`, rank: 0, rarity: 5 }
     } else if (roll < 91.5) { // EGO WAW
       const pool = db.egos.filter(g => g.grade === 'WAW')
       return this._pick(pool, 'ego', 2)

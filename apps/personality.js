@@ -1,11 +1,8 @@
-import lodash from 'lodash'
-import fs from 'fs'
-import { Data } from '../components/index.js'
 import { rulePrefix } from '../utils/common.js'
 import runtimeRender from '../utils/runtimeRender.js'
 import db from '../lib/db.mjs'
 import { buildPersonalityCard, buildSinnerPersonalityList, suggestions } from '../lib/cards.mjs'
-import { rememberSelect, takeSelect, peekSelect, clearSelect } from '../lib/selection.mjs'
+import { rememberSelect, peekSelect, clearSelect } from '../lib/selection.mjs'
 
 export class LimbusQuery extends plugin {
   constructor() {

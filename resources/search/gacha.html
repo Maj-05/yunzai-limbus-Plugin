@@ -10,7 +10,7 @@
   <div class="gacha-sub">稀有出卡 <span class="rare-count">{{rareCount}}</span> 张</div>
 </div>
 
-<div class="gacha-grid">
+<div class="gacha-grid {{gachaMulti ? '' : 'single'}}">
   {{each results r i}}
   <div class="gacha-card {{r.isRare ? 'rare' : ''}} {{r.isShard ? 'shard' : ''}}" style="border-color:{{r.rarityColor}};color:{{r.rarityColor}}">
     <div class="gacha-art">

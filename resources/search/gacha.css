@@ -4,7 +4,9 @@
 .gacha-sub { font-size: 13px; color: #5a6a85; margin-top: 4px; }
 .rare-count { color: #d6a52a; font-weight: 800; }
 
-.gacha-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+/* 列数自适应：十连 5 列，单抽(1张)自然单列居中，卡宽更合理 */
+.gacha-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 205px)); gap: 12px; justify-content: center; }
+.gacha-grid.single { grid-template-columns: minmax(0, 300px); }
 
 .gacha-card {
   position: relative;
