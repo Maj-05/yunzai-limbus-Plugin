@@ -15,6 +15,7 @@ export class LimbusQuery extends plugin {
       event: 'message',
       priority: 500,
       rule: [
+        { reg: `^${rulePrefix}人格对比\s*(.+)$`, fnc: 'comparePersonality' },
         { reg: `^${rulePrefix}(?:人格|身份)\s*(.+)$`, fnc: 'queryPersonality' },
         { reg: '^#?[1-8]$', fnc: 'selectNumber' }
       ]
@@ -77,6 +78,45 @@ export class LimbusQuery extends plugin {
       return true
     }
     await runtimeRender(this.e, 'personality/personality', { card }, { scale: 1.4 })
+    return true
+  }
+
+  /** #人格对比 A B：文本版对比两**张人格**核心数值 */
+  async comparePersonality() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const raw = this.e.msg.replace(/#|\/|边狱|巴士|084|limbus|Limbus|人格|对比/g, '').trim()
+    const parts = raw.split(/[\s与和、,，]+/).map(x => x.trim()).filter(Boolean).slice(0, 2)
+    if (parts.length < 2) { await this.reply('用法：#人格对比 目标A 目标B，例：#人格对比 良秀黑云会若众 良秀W公司3级清扫人员'); return true }
+    const cards = []
+    const names = []
+    for (const p of parts) {
+      const ids = db.searchPersonality(p, 1)
+      if (!ids.length) { await this.reply('未找到「' + p + '」'); return true }
+      const c = buildPersonalityCard(ids[0])
+      if (!c) { await this.reply('「' + p + '」数据缺失'); return true }
+      cards.push(c); names.push(c.name)
+    }
+    // 文本对比卡
+    const A = cards[0], B = cards[1]
+    const atkN = s => (s.atkName || '') + ' ' + (s.base ?? '?') + '+' + (s.coin ?? '?') + 'x' + (s.power ?? '?')
+    const skillLine = c => c.skills.slice(0, 4).map((s, i) => `${i + 1}.${s.name} [${s.sinName}] ${atkN(s)}`).join('\n      ')
+    const resistLine = c => (c.resist || []).map(r => `${r.type}${r.label}`).join(' ')
+    const body = []
+    body.push(`【人格对比】`)
+    body.push(`──────────────`)
+    body.push(`A | ${A.name}（${A.rankName} ${A.seasonLabel}）`)
+    body.push(`B | ${B.name}（${B.rankName} ${B.seasonLabel}）`)
+    body.push(`── 基础数值 ──`)
+    body.push(`HP   A:${A.hp}  B:${B.hp}   (成长 A:+${A.hpInc} B:+${B.hpInc})`)
+    body.push(`速度 A:${A.speed}  B:${B.speed}`)
+    body.push(`防御 A:${A.def}  B:${B.def}`)
+    body.push(`── 技能 ──`)
+    body.push(`A:\n      ${skillLine(A)}`)
+    body.push(`B:\n      ${skillLine(B)}`)
+    body.push(`── 抗性(斩/突/打) ──`)
+    body.push(`A: ${resistLine(A)}`)
+    body.push(`B: ${resistLine(B)}`)
+    await this.reply(body.join('\n'))
     return true
   }
 
