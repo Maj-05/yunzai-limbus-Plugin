@@ -215,7 +215,7 @@ export class LimbusQuery2 extends plugin {
     await runtimeRender(this.e, 'search/search', {
       kind: sel.kindName,
       keyword: `${sel.kindName}（第 ${page + 1}/${totalPages} 页）`,
-      results: suggestions(shown, sel.kindName === '敌人' ? 'enemy' : ''),
+      results: suggestions(shown, { '敌人':'enemy', '人格':'personality', 'E.G.O':'ego', '饰品':'gift' }[sel.kindName] || ''),
       page: { cur: page + 1, total: totalPages }
     }, { scale: 1.4 })
     return true

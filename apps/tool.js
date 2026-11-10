@@ -3,6 +3,7 @@ import runtimeRender from '../utils/runtimeRender.js'
 import db from '../lib/db.mjs'
 import { buildPersonalityCard, buildEgoCard } from '../lib/cards.mjs'
 import { readData, SINNER_NAMES } from '../lib/constants.mjs'
+import { rememberSelect } from '../lib/selection.mjs'
 
 /**
  * 工具类命令：状态速查 / 随机查询 / 罪人总览
@@ -238,28 +239,26 @@ export class LimbusTool extends plugin {
   }
 
   /** 抽卡模拟：#抽卡 单抽 / #抽卡 十连 */
-  /** #图鉴：全量人格图鉴浏览。无参=稀有度概览；N灯=列该稀有度人格；罪人名=该罪人人格 */
+  /** #图鉴：全量人格图鉴浏览（支持分页）。无参=稀有度概览；N灯/罪人名=分页列出（#下一页/上一页/第N页/序号） */
   async catalogBrowse() {
     if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
     const q = this._stripKw(this.e.msg, '图鉴').trim()
-    const atkNameMap = { SLASH: '斩', PENETRATE: '突', HIT: '打' }
-    // 1) 罪人名 → 该罪人人格列表
+    // 1) 罪人名 → 该罪人人格分页
     if (q) {
       const cid = db.resolveSinner(q)
       if (cid) {
         const list = db.personalitiesOfSinner(cid)
-        const lines = list.map((p, i) => `${i + 1}. ${p.name}（${p.rank}灯 ${p.season === 0 ? '' : 'S' + p.season}）`)
-        await this.reply(`【${SINNER_NAMES[cid] || q}】\n` + (lines.join('\n') || '无人格'))
-        return true
+        const ids = list.map(p => p.id)
+        if (!ids.length) { await this.reply('无人格'); return true }
+        return this._renderCatalogPage(ids, SINNER_NAMES[cid] || q)
       }
-      // 2) N灯 → 稀有度筛选
+      // 2) N灯 → 稀有度筛选分页
       const lm = q.match(/^(\d{1,2})灯?$/)
       if (lm) {
         const rank = Number(lm[1])
-        const list = db.personalities.filter(p => (p.rank ?? 0) === rank)
-        const lines = list.map((p, i) => `${i + 1}. ${p.name}`)
-        await this.reply(`【${rank}灯人格（${list.length}）】\n` + lines.join('\n'))
-        return true
+        const ids = db.personalities.filter(p => (p.rank ?? 0) === rank).map(p => p.id)
+        if (!ids.length) { await this.reply(`没有${rank}灯人格`); return true }
+        return this._renderCatalogPage(ids, `${rank}灯人格`)
       }
       await this.reply(`没有「${q}」。\n用法：#图鉴 <罪人名> 或 #图鉴 N灯`)
       return true
@@ -268,7 +267,23 @@ export class LimbusTool extends plugin {
     const cnt = {}
     db.personalities.forEach(p => { const r = p.rank ?? 0; cnt[r] = (cnt[r] || 0) + 1 })
     const lines = Object.entries(cnt).sort((a, b) => a[0] - b[0]).map(([r, n]) => `${r}灯：${n} 个`)
-    await this.reply(`【人格图鉴概览】\n${lines.join('\n')}\n\n用法：#图鉴 3灯 看全部3灯人格；#图鉴 良秀 看该罪人人格`)
+    await this.reply(`【人格图鉴概览】\n${lines.join('\n')}\n\n用法：#图鉴 3灯 看全部3灯人格；#图鉴 良秀 看该罪人人格（翻页 #下一页）`)
+    return true
+  }
+
+  /** 渲染图鉴人格分页：存 selection，显示当前页前8个，支持翻页/序号选择 */
+  async _renderCatalogPage(ids, title) {
+    const PAGE = 8
+    const page = 0
+    const totalPages = Math.max(1, Math.ceil(ids.length / PAGE))
+    const shown = ids.slice(0, PAGE)
+    rememberSelect(this.e.user_id, { ids, kindName: '人格', render: buildPersonalityCard, tpl: 'personality/personality', page, pageSize: PAGE })
+    const lines = shown.map((id, i) => {
+      const p = db.getPersonality(id)
+      return `${i + 1}. ${p.name}（${p.rank}灯 ${p.season === 0 ? '' : 'S' + p.season}）`
+    })
+    const more = ids.length > PAGE ? `\n…等 ${ids.length} 个 · 回复 下一页/上一页/第N页 翻页，序号查看详情` : ''
+    await this.reply(`【${title}】第 ${page + 1}/${totalPages} 页\n` + lines.join('\n') + more)
     return true
   }
 
