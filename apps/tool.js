@@ -385,6 +385,7 @@ export class LimbusTool extends plugin {
     }
     // 十连：图片卡片墙
     const cards = results.map(r => {
+      if (r.kind === 'shard') return { art: '', name: r.name || '人格碎片', rarityName: '碎片', rarityColor: '#a8a8a8', isRare: false }
       const art = r.kind === 'ego' ? artUrl(r.id, 'awaken_profile') : artUrl(r.id, 'normal')
       const rar = r.kind === 'ego' ? (r.grade || '?') : `${r.rank}灯`
       const color = { 1: '#d8433c', 2: '#e8b93c', 3: '#6aa8e8', 4: '#c88ae0', 5: '#7ec27e' }[r.rarity] || '#a8a8a8'
@@ -484,16 +485,15 @@ export class LimbusTool extends plugin {
     } else if (roll < 13.7) { // 人格 2灯
       const pool = db.personalities.filter(p => (p.rank ?? 0) === 2)
       return this._pick(pool, 'personality', 3)
-    } else if (roll < 84.7) { // 人格 1灯（含碎片，最低档）
-      const pool = db.personalities.filter(p => (p.rank ?? 0) === 1)
-      return this._pick(pool, 'personality', 5)
-    } else if (roll < 85.2) { // EGO WAW
+    } else if (roll < 91) { // 人格碎片（1灯初始人格不可抽，全部为碎片）
+      return { kind: 'shard', id: 0, name: '人格碎片', rank: 0, rarity: 5 }
+    } else if (roll < 91.5) { // EGO WAW
       const pool = db.egos.filter(g => g.grade === 'WAW')
       return this._pick(pool, 'ego', 2)
-    } else if (roll < 86.7) { // EGO HE
+    } else if (roll < 93) { // EGO HE
       const pool = db.egos.filter(g => g.grade === 'HE')
       return this._pick(pool, 'ego', 3)
-    } else if (roll < 92.7) { // EGO TETH
+    } else if (roll < 97) { // EGO TETH
       const pool = db.egos.filter(g => g.grade === 'TETH')
       return this._pick(pool, 'ego', 4)
     } else { // EGO ZAYIN（排除初始）
@@ -524,6 +524,7 @@ export class LimbusTool extends plugin {
 
   _gachaLabel(r) {
     if (r.kind === 'ego') return `E.G.O·${r.grade}`
+    if (r.kind === 'shard') return '人格碎片'
     return `人格·${r.rank}灯`
   }
 }
