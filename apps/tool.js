@@ -21,6 +21,7 @@ export class LimbusTool extends plugin {
         { reg: `^${rulePrefix}(?:罪人总览|罪人)$`, fnc: 'sinnerOverview' },
         { reg: `^${rulePrefix}(?:流派)\\s*(.*)$`, fnc: 'flowInfo' },
         { reg: `^${rulePrefix}(?:配队|队伍)\\s*(.*)$`, fnc: 'teamInfo' },
+        { reg: `^${rulePrefix}(?:抽卡预算|预算)\\s*(.*)$`, fnc: 'gachaBudget' },
         { reg: `^${rulePrefix}抽卡(?:\\s+(.*))?$`, fnc: 'gacha' }
       ]
     })
@@ -181,6 +182,52 @@ export class LimbusTool extends plugin {
     const lines = results.map((r, i) => `${String(i + 1).padStart(2)}. ${this._gachaLabel(r)} · ${r.name}`)
     const rare = results.filter(r => r.rarity <= 2).length
     await this.reply(`【抽卡·十连】\n${lines.join('\n')}\n\n稀有出卡 ${rare} 张`)
+    return true
+  }
+
+  /** #抽卡预算：攒抽估算。输入现有资源换算总抽数，可选天数估算日常可攒。
+   *  规则：单抽=130狂气；单抽券=1抽；十连券=10抽；每日约75狂气（任务），每周约550狂气（镜像+维护+通行证）。
+   */
+  async gachaBudget() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const q = this._stripKw(this.e.msg, '抽卡预算|预算').trim()
+    if (!q) {
+      await this.reply(
+        `【攒抽计算器】\n用法：#抽卡预算 <狂气> [单抽券] [十连券] [剩余天数]\n` +
+        `例：#抽卡预算 13000 5 2 30\n` +
+        `例：#抽卡预算 6500 0 1 7\n\n` +
+        `按 单抽=130狂气、十连券=10抽 换算；剩余天数按每日约75狂气+每周约550狂气估算。`
+      )
+      return true
+    }
+    const nums = (q.match(/\d+/g) || []).map(Number)
+    const lunar = nums[0] ?? 0      // 狂气
+    const single = nums[1] ?? 0     // 单抽券
+    const ten = nums[2] ?? 0        // 十连券
+    const days = nums[3] ?? 0       // 剩余天数（可选）
+
+    const lunarPulls = Math.floor(lunar / 130)
+    const singlePulls = single
+    const tenPulls = ten * 10
+    const currentPulls = lunarPulls + singlePulls + tenPulls
+
+    // 未来可攒估算
+    let dailyPulls = 0
+    let estLine = ''
+    if (days > 0) {
+      const lunarEarn = days * 75 + Math.ceil(days / 7) * 550
+      dailyPulls = Math.floor(lunarEarn / 130)
+      estLine = `\n剩余 ${days} 天可攒约 ${dailyPulls} 抽（每日75+周常550狂气，估算）`
+    }
+
+    await this.reply(
+      `【攒抽计算器】\n` +
+      `现有：狂气 ${lunar} / 单抽券 ${single} / 十连券 ${ten}\n` +
+      `→ 狂气折 ${lunarPulls} 抽 + 券折 ${singlePulls + tenPulls} 抽\n` +
+      `合计当前可抽 **${currentPulls}** 抽` +
+      estLine +
+      `\n\n（按 130狂气/抽 换算，仅供参考）`
+    )
     return true
   }
 
