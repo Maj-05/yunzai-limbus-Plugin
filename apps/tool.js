@@ -1,7 +1,7 @@
 import { rulePrefix } from '../utils/common.js'
 import runtimeRender from '../utils/runtimeRender.js'
 import db from '../lib/db.mjs'
-import { buildPersonalityCard, buildEgoCard } from '../lib/cards.mjs'
+import { buildPersonalityCard, buildEgoCard, artUrl } from '../lib/cards.mjs'
 import { readData, SINNER_NAMES } from '../lib/constants.mjs'
 import { rememberSelect } from '../lib/selection.mjs'
 
@@ -358,10 +358,15 @@ export class LimbusTool extends plugin {
       await this.reply(`【抽卡】${this._gachaLabel(r)}：${r.name}`)
       return true
     }
-    // 十连：文本列表
-    const lines = results.map((r, i) => `${String(i + 1).padStart(2)}. ${this._gachaLabel(r)} · ${r.name}`)
+    // 十连：图片卡片墙
+    const cards = results.map(r => {
+      const art = r.kind === 'ego' ? artUrl(r.id, 'awaken_profile') : artUrl(r.id, 'normal')
+      const rar = r.kind === 'ego' ? (r.grade || '?') : `第${r.rank}星`
+      const color = { 1: '#d8433c', 2: '#e8b93c', 3: '#6aa8e8', 4: '#c88ae0', 5: '#7ec27e' }[r.rarity] || '#a8a8a8'
+      return { art, name: r.name, rarityName: rar, rarityColor: color, isRare: r.rarity <= 2 }
+    })
     const rare = results.filter(r => r.rarity <= 2).length
-    await this.reply(`【抽卡·十连】\n${lines.join('\n')}\n\n稀有出卡 ${rare} 张`)
+    await runtimeRender(this.e, 'search/gacha', { results: cards, rareCount: rare, gachaMulti: true }, { scale: 1.4 })
     return true
   }
 

@@ -1,0 +1,26 @@
+{{extend defaultLayout}}
+
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{pluResPath}}search/gacha.css"/>
+{{/block}}
+
+{{block 'main'}}
+<div class="gacha-head">
+  <div class="gacha-title">边狱巴士 · {{gachaMulti ? '十连' : '单抽'}}</div>
+  <div class="gacha-sub">稀有出卡 <span class="rare-count">{{rareCount}}</span> 张</div>
+</div>
+
+<div class="gacha-grid">
+  {{each results r i}}
+  <div class="gacha-card {{r.isRare ? 'rare' : ''}}">
+    <div class="gacha-art">
+      <img src="{{r.art}}" onerror="this.style.display='none';this.parentNode.classList.add('no-art')"/>
+    </div>
+    <div class="gacha-rarity" style="background:{{r.rarityColor}}">{{r.rarityName}}</div>
+    <div class="gacha-name" style="color:{{r.rarityColor}}">{{r.name}}</div>
+  </div>
+  {{/each}}
+</div>
+
+<div class="copyright">{{@sys.copyright}}</div>
+{{/block}}
