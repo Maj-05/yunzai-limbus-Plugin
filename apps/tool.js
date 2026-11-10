@@ -388,7 +388,17 @@ export class LimbusTool extends plugin {
       if (r.kind === 'shard') return { art: '', name: r.name || '人格碎片', rarityName: '碎片', rarityColor: '#a8a8a8', isRare: false, isShard: true }
       const art = r.kind === 'ego' ? artUrl(r.id, 'awaken_profile') : artUrl(r.id, 'normal')
       const rar = r.kind === 'ego' ? (r.grade || '?') : `${r.rank}灯`
-      const color = { 1: '#d8433c', 2: '#e8b93c', 3: '#6aa8e8', 4: '#c88ae0', 5: '#7ec27e' }[r.rarity] || '#a8a8a8'
+      const SIN_COLOR = { WRATH:'#d8433c', LUST:'#8a5a33', SLOTH:'#e2c23a', GLUTTONY:'#4caf50', GLOOM:'#6fb3e8', PRIDE:'#2b3d8f', ENVY:'#9b5bb8', CRIMSON:'#d8433c', AMBER:'#8a5a33', SCARLET:'#e2c23a', SHAMROCK:'#4caf50', AZURE:'#6fb3e8', INDIGO:'#2b3d8f', VIOLET:'#9b5bb8', NEUTRAL:'#888' }
+      let color
+      if (r.kind === 'ego') {
+        // EGO 边框按主罪孽属性（cost 第一个属性）
+        const g = db.getEgo(r.id)
+        const sin = g && g.cost && g.cost[0] ? g.cost[0].sin : ''
+        color = SIN_COLOR[sin] || '#9b5bb8'
+      } else {
+        // 人格边框按灯数（3灯金/2灯蓝/1灯绿）
+        color = { 3: '#e8b93c', 2: '#6aa8e8', 1: '#7ec27e' }[r.rank] || '#a8a8a8'
+      }
       return { art, name: r.name, rarityName: rar, rarityColor: color, isRare: r.rarity <= 2 }
     })
     const rare = results.filter(r => r.rarity <= 2).length
