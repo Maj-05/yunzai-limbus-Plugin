@@ -386,7 +386,7 @@ export class LimbusTool extends plugin {
     // 十连：图片卡片墙
     const cards = results.map(r => {
       const art = r.kind === 'ego' ? artUrl(r.id, 'awaken_profile') : artUrl(r.id, 'normal')
-      const rar = r.kind === 'ego' ? (r.grade || '?') : `第${r.rank}星`
+      const rar = r.kind === 'ego' ? (r.grade || '?') : `${r.rank}灯`
       const color = { 1: '#d8433c', 2: '#e8b93c', 3: '#6aa8e8', 4: '#c88ae0', 5: '#7ec27e' }[r.rarity] || '#a8a8a8'
       return { art, name: r.name, rarityName: rar, rarityColor: color, isRare: r.rarity <= 2 }
     })
@@ -512,13 +512,13 @@ export class LimbusTool extends plugin {
       rank: it.rank,           // 人格用
       grade: it.grade,         // EGO用
       rarity,                  // 稀有度等级(越小越稀有)
-      label: isEgo ? it.grade : `第${it.rank}星`
+      label: isEgo ? it.grade : `${it.rank}灯`
     }
   }
 
   _gachaLabel(r) {
     if (r.kind === 'ego') return `E.G.O·${r.grade}`
-    return `人格·第${r.rank}星`
+    return `人格·${r.rank}灯`
   }
 }
 
