@@ -385,7 +385,7 @@ export class LimbusTool extends plugin {
     }
     // 十连：图片卡片墙
     const cards = results.map(r => {
-      if (r.kind === 'shard') return { art: '', name: r.name || '人格碎片', rarityName: '碎片', rarityColor: '#a8a8a8', isRare: false }
+      if (r.kind === 'shard') return { art: '', name: r.name || '人格碎片', rarityName: '碎片', rarityColor: '#a8a8a8', isRare: false, isShard: true }
       const art = r.kind === 'ego' ? artUrl(r.id, 'awaken_profile') : artUrl(r.id, 'normal')
       const rar = r.kind === 'ego' ? (r.grade || '?') : `${r.rank}灯`
       const color = { 1: '#d8433c', 2: '#e8b93c', 3: '#6aa8e8', 4: '#c88ae0', 5: '#7ec27e' }[r.rarity] || '#a8a8a8'
