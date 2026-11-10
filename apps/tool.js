@@ -22,6 +22,7 @@ export class LimbusTool extends plugin {
         { reg: `^${rulePrefix}(?:流派)\\s*(.*)$`, fnc: 'flowInfo' },
         { reg: `^${rulePrefix}(?:配队|队伍)\\s*(.*)$`, fnc: 'teamInfo' },
         { reg: `^${rulePrefix}(?:抽卡预算|预算)\\s*(.*)$`, fnc: 'gachaBudget' },
+        { reg: `^${rulePrefix}(?:探索事件|事件)\\s*(.*)$`, fnc: 'exploreEvent' },
         { reg: `^${rulePrefix}抽卡(?:\\s+(.*))?$`, fnc: 'gacha' }
       ]
     })
@@ -231,6 +232,37 @@ export class LimbusTool extends plugin {
     return true
   }
 
+  /** #事件 探索事件速查：#事件 随机 / #事件 <名> / #事件 */
+  async exploreEvent() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const q = this._stripKw(this.e.msg, '探索事件|事件').trim()
+    const events = readEventData()
+    if (!events || !events.length) { await this.reply('探索事件数据未就绪'); return true }
+    if (!q || /^(随机|全部|列表)$/i.test(q)) {
+      const lines = events.map((e, i) => `${i + 1}. ${e.name}（${e.location || '镜像迷宫'}）`)
+      await this.reply(`【镜牢探索事件】\n${lines.join('\n')}\n\n用法：#事件 随机 或 #事件 <事件名>`)
+      return true
+    }
+    if (/^随机$/i.test(q)) {
+      const e = events[Math.floor(Math.random() * events.length)]
+      const body = [`【${e.name}】`, e.desc, '', '选项：']
+      ;(e.options || []).forEach((o, i) => body.push(`${i + 1}. ${o.text}：${o.result}`))
+      await this.reply(body.join('\n'))
+      return true
+    }
+    const key = q.replace(/\s+/g, '')
+    const e = events.find(x => (x.name || '').replace(/\s+/g, '') === key || (x.name || '').includes(q))
+    if (!e) {
+      const names = events.map(x => x.name).join(' / ')
+      await this.reply(`没有「${q}」这个事件。\n可用事件：${names}\n或 #事件 随机`)
+      return true
+    }
+    const body = [`【${e.name}】`, e.desc, '', '选项：']
+    ;(e.options || []).forEach((o, i) => body.push(`${i + 1}. ${o.text}：${o.result}`))
+    await this.reply(body.join('\n'))
+    return true
+  }
+
   /** 单次抽取：按稀有度概率抽一个人格或 EGO */
   _rollOnce() {
     // 概率模型：人格 3灯/2灯/1灯 + EGO WAW/HE/TETH/ZAYIN
@@ -294,6 +326,15 @@ function readStatusData() {
 function readFlowData() {
   try {
     return readData('flows') || []
+  } catch {
+    return []
+  }
+}
+
+/** 读取探索事件数据（resources/data/events.json，基于灰机wiki整理） */
+function readEventData() {
+  try {
+    return readData('events') || []
   } catch {
     return []
   }
