@@ -17,6 +17,7 @@ export class LimbusTool extends plugin {
       rule: [
         { reg: `^${rulePrefix}(?:状态|机制|效果)\\s*(.+)$`, fnc: 'queryStatus' },
         { reg: `^${rulePrefix}(?:技能)\\s*(.+)$`, fnc: 'skillSearch' },
+        { reg: `^${rulePrefix}(?:抗性)\s*(.+)$`, fnc: 'resistQuery' },
         { reg: `^${rulePrefix}随机(?:人格|身份)\\s*$`, fnc: 'randomPersonality' },
         { reg: `^${rulePrefix}随机(?:ego|EGO)\\s*$`, fnc: 'randomEgo' },
         { reg: `^${rulePrefix}(?:罪人总览|罪人)\s*(.*)$`, fnc: 'sinnerOverview' },
@@ -85,6 +86,33 @@ export class LimbusTool extends plugin {
     const shown = hits.slice(0, 15)
     const more = hits.length > 15 ? `\n…等 ${hits.length} 条` : ''
     await this.reply(`【含「${q}」的技能/被动】（${hits.length} 条）\n${shown.map((h, i) => `${i + 1}. ${h}`).join('\n')}${more}\n\n用法：#人格 <名> 查看详情`)
+    return true
+  }
+
+  /** #抗性 <人格/敌人>：速查对斩击/突刺/打击的攻击抗性 */
+  async resistQuery() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const q = this._stripKw(this.e.msg, '抗性').trim()
+    if (!q) { await this.reply('用法：#抗性 <人格或敌人名>，例：#抗性 李箱 / 黑檀女王的苹果'); return true }
+    // 先按人格查
+    let target = null, kind = ''
+    const pids = db.searchPersonality(q, 1)
+    if (pids.length) { target = db.getPersonality(pids[0]); kind = '人格' }
+    else {
+      const eids = db.searchEnemy(q, 1)
+      if (eids.length) { target = db.getEnemy(eids[0]); kind = '敌人' }
+    }
+    if (!target) { await this.reply(`没有找到「${q}」`); return true }
+    const resist = (target.resist || []).map(r => {
+      const atkName = { SLASH: '斩击', PENETRATE: '突刺', HIT: '打击' }[r.type] || r.type
+      const tag = r.value >= 2 ? '弱点×' + r.value : r.value <= 0.5 ? '抵抗×' + r.value : '普通×' + r.value
+      return `${atkName} ${tag}`
+    })
+    if (!resist.length) { await this.reply(`【${target.name}·${kind}】暂无抗性数据`); return true }
+    await this.reply(`【${target.name}·${kind}抗性】
+` + resist.join('　') + `
+
+（镜牢选角参考：弱点=受到该伤害增加，抵抗=减少）`)
     return true
   }
 
