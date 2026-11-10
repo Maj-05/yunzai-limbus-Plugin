@@ -16,6 +16,7 @@ export class LimbusTool extends plugin {
       priority: 500,
       rule: [
         { reg: `^${rulePrefix}(?:状态|机制|效果)\\s*(.+)$`, fnc: 'queryStatus' },
+        { reg: `^${rulePrefix}(?:技能)\\s*(.+)$`, fnc: 'skillSearch' },
         { reg: `^${rulePrefix}随机(?:人格|身份)\\s*$`, fnc: 'randomPersonality' },
         { reg: `^${rulePrefix}随机(?:ego|EGO)\\s*$`, fnc: 'randomEgo' },
         { reg: `^${rulePrefix}(?:罪人总览|罪人)$`, fnc: 'sinnerOverview' },
@@ -52,6 +53,38 @@ export class LimbusTool extends plugin {
       return true
     }
     await this.reply(`【${hit.name}】\n${hit.desc || ''}`)
+    return true
+  }
+
+  /** #技能 <关键词>：按效果关键词搜索人格技能/被动（攻略向） */
+  async skillSearch() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const q = this._stripKw(this.e.msg, '技能').trim()
+    if (!q) { await this.reply('用法：#技能 <关键词>，例：#技能 破裂 / 烧伤 / 流血 / 震颤 / 沉沦 / 充能 / 呼吸'); return true }
+    const kws = [q]
+    const kwHit = (txt) => kws.some(kw => (txt || '').includes(kw))
+    const hits = []
+    // 扫人格技能
+    for (const p of db.personalities) {
+      for (const s of p.skills || []) {
+        const t = db.skillText(s.skillId) || {}
+        if (kwHit(t.desc)) {
+          hits.push(`${p.name} · ${t.name || '技能' + s.skillId}`)
+          break // 每人格最多记一条
+        }
+      }
+    }
+    // 扫被动
+    for (const p of db.personalities) {
+      for (const pv of p.passives || []) {
+        const t = db.passiveText(pv.id) || {}
+        if (kwHit(t.desc)) { hits.push(`${p.name} · [被动]${t.name || '被动' + pv.id}`); break }
+      }
+    }
+    if (!hits.length) { await this.reply(`没有找到含「${q}」的技能/被动。\n试试：破裂 / 烧伤 / 流血 / 震颤 / 沉沦 / 充能 / 呼吸 / 迅捷 / 束缚`); return true }
+    const shown = hits.slice(0, 15)
+    const more = hits.length > 15 ? `\n…等 ${hits.length} 条` : ''
+    await this.reply(`【含「${q}」的技能/被动】（${hits.length} 条）\n${shown.map((h, i) => `${i + 1}. ${h}`).join('\n')}${more}\n\n用法：#人格 <名> 查看详情`)
     return true
   }
 
