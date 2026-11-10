@@ -296,6 +296,19 @@ export class LimbusTool extends plugin {
         if (!ids.length) { await this.reply(`没有${rank}灯人格`); return true }
         return this._renderCatalogPage(ids, `${rank}灯人格`)
       }
+      // 3) 赛季筛选：#图鉴 赛季N / S3 / 瓦夜
+      const seasonM = q.match(/^(?:赛季|S)\s*(\d{1,2})$/i) || q.match(/^赛季(\d{1,2})$/i)
+      if (/^瓦夜$/i.test(q)) {
+        const ids = db.personalities.filter(p => (p.season ?? 0) >= 1000).map(p => p.id)
+        if (!ids.length) { await this.reply('无瓦夜人格'); return true }
+        return this._renderCatalogPage(ids, '瓦夜人格')
+      }
+      const seasonNum = seasonM ? Number(seasonM[1] || seasonM[2]) : null
+      if (seasonNum !== null) {
+        const ids = db.personalities.filter(p => (p.season ?? 0) === seasonNum).map(p => p.id)
+        if (!ids.length) { await this.reply(`没有赛季${seasonNum}人格`); return true }
+        return this._renderCatalogPage(ids, `赛季${seasonNum}人格`)
+      }
       await this.reply(`没有「${q}」。\n用法：#图鉴 <罪人名> 或 #图鉴 N灯`)
       return true
     }
