@@ -396,8 +396,8 @@ export class LimbusTool extends plugin {
         const sin = g && g.cost && g.cost[0] ? g.cost[0].sin : ''
         color = SIN_COLOR[sin] || '#9b5bb8'
       } else {
-        // 人格边框按灯数（3灯金/2灯蓝/1灯绿）
-        color = { 3: '#e8b93c', 2: '#6aa8e8', 1: '#7ec27e' }[r.rank] || '#a8a8a8'
+        // 人格边框按灯数（官方：3灯金 #FFD700 / 2灯红 #DC143C / 1灯灰 #A9A9A9）
+        color = { 3: '#ffd700', 2: '#dc143c', 1: '#a9a9a9' }[r.rank] || '#a9a9a9'
       }
       return { art, name: r.name, rarityName: rar, rarityColor: color, isRare: r.rarity <= 2 }
     })

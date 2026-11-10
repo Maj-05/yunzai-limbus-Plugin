@@ -1,4 +1,4 @@
-/* 抽卡卡片墙（模拟官方风格：稀有度光效/渐变） */
+/* 抽卡卡片墙（模拟官方：边框色由稀有度/属性决定，光晕用 currentColor） */
 .gacha-head { text-align: center; margin-bottom: 16px; }
 .gacha-title { font-size: 30px; font-weight: 800; color: #1d3557; letter-spacing: 3px; }
 .gacha-sub { font-size: 13px; color: #5a6a85; margin-top: 4px; }
@@ -11,29 +11,18 @@
   border-radius: 12px;
   overflow: hidden;
   background: #fff;
-  border: 3px solid #cfd9e8;
-  box-shadow: 0 2px 8px rgba(40,60,100,.12);
+  border: 3px solid #cfd9e8;      /* 具体颜色由内联 border-color 覆盖 */
+  color: #cfd9e8;                 /* 光晕基准色，由内联覆盖 */
+  box-shadow: 0 2px 10px rgba(40,60,100,.10);
   text-align: center;
 }
-/* 稀有卡（3灯/WAW）：金色渐变 + 光晕，贴近官方稀有表现 */
+/* 稀有卡加强光晕（颜色依旧跟随 currentColor） */
 .gacha-card.rare {
-  border-color: #e8b93c;
-  box-shadow: 0 0 22px rgba(232,185,60,.65), inset 0 0 30px rgba(232,185,60,.18);
+  box-shadow: 0 0 22px currentColor, 0 2px 10px rgba(40,60,100,.10), inset 0 0 26px rgba(255,255,255,.35);
 }
-.gacha-card.rare .gacha-art { background: linear-gradient(160deg, #fff7e0, #fbe3a0, #fff0c8); }
-
-/* 碎片卡：灰色专属样式（人格碎片） */
+/* 碎片卡：灰色专属底纹 */
 .gacha-card.shard {
-  border-color: #b9c0cc;
   background: linear-gradient(180deg, #f2f4f8, #e2e6ec);
-}
-.gacha-card.shard .gacha-art {
-  background: linear-gradient(180deg, #e8ebf0, #d2d7e0);
-}
-.gacha-card.shard .gacha-art .shard-ico {
-  display: flex; align-items: center; justify-content: center;
-  height: 100%; color: #9aa3b2; font-size: 16px; font-weight: 800;
-  letter-spacing: 1px;
 }
 
 .gacha-art {
@@ -44,6 +33,12 @@
 }
 .gacha-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .gacha-art.no-art { background: #e8edf4; }
+
+.gacha-card.shard .gacha-art .shard-ico {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; color: #9aa3b2; font-size: 16px; font-weight: 800;
+  letter-spacing: 1px;
+}
 
 .gacha-rarity {
   position: absolute;

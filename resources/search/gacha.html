@@ -12,7 +12,7 @@
 
 <div class="gacha-grid">
   {{each results r i}}
-  <div class="gacha-card {{r.isRare ? 'rare' : ''}} {{r.isShard ? 'shard' : ''}}">
+  <div class="gacha-card {{r.isRare ? 'rare' : ''}} {{r.isShard ? 'shard' : ''}}" style="border-color:{{r.rarityColor}};color:{{r.rarityColor}}">
     <div class="gacha-art">
       {{if r.isShard}}<div class="shard-ico">碎片</div>{{else}}<img src="{{r.art}}" onerror="this.style.display='none';this.parentNode.classList.add('no-art')"/>{{/if}}
     </div>
