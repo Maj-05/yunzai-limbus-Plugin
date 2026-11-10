@@ -7,5 +7,7 @@
       "LocalizeLimbusCompany": "https://ghfast.top/https://github.com/LocalizeLimbusCompany/LocalizeLimbusCompany.git"
     }
   },
-  "tip": "配好 ghMirror 后执行 #limbus更新，会重新拉取 LocalizeLimbusCompany 中文文本源并重建数据，即可补齐显示为 技能{id} 等缺失的技能/被动描述。"
+  "tip": "配好 ghMirror 后执行 #limbus更新，会重新拉取 LocalizeLimbusCompany 中文文本源并重建数据，即可补齐显示为 技能{id} 等缺失的技能/被动描述。",
+  "artMirror": "",
+  "artNote": "立绘图床前缀。若服务器无法直连 huiji-public.huijistatic.com(国内常见)，可填可访问的镜像/CDN(以 https:// 开头)，如 https://你的镜像/ 或留空用默认图床。"
 }

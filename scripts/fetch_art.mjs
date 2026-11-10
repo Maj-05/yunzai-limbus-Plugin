@@ -29,6 +29,15 @@ function md5Path (fn) {
   return `${h[0]}/${h.slice(0, 2)}/${fn}`
 }
 
+/** 读取可配置的立绘图床前缀(config/system/update.json 的 artMirror)，默认灰机wiki图床 */
+function getArtBase () {
+  try {
+    const cfg = JSON.parse(fs.readFileSync(path.join(PLUGIN_ROOT, 'config', 'system', 'update.json'), 'utf8'))
+    if (cfg.artMirror) return cfg.artMirror.replace(/\/$/, '')
+  } catch {}
+  return 'https://' + HOST
+}
+
 function download (url, timeout = 20000, retries = 2) {
   return new Promise((resolve, reject) => {
     const attempt = (n) => {
@@ -112,7 +121,7 @@ export async function build () {
     while (cursor < tasks.length) {
       const t = tasks[cursor++]
       try {
-        const url = `https://${HOST}${BASE}/${md5Path(t.fn)}`
+        const url = `${getArtBase()}${BASE}/${md5Path(t.fn)}`
         const buf = await download(url)
         if (buf.length < 5000) throw new Error('too-small')
         fs.writeFileSync(t.target, buf)
