@@ -474,7 +474,8 @@ export class LimbusTool extends plugin {
 
   /** 单次抽取：按稀有度概率抽一个人格或 EGO */
   _rollOnce() {
-    // 概率模型(参考游戏标准抽卡)：人格 3灯1.7%/2灯12%/1灯48% + EGO WAW2%/HE4%/TETH15%/ZAYIN17%
+    // 概率模型(参考游戏标准抽卡)：人格 3灯1.7%/2灯12%/1灯(含碎片)~71% + EGO WAW0.5%/HE1.5%/TETH6%/ZAYIN(非初始)8%
+    // 排除每罪人初始ZAYIN EGO(20X01, 如桑丘之血/森罗炎象, 开局自带不可抽)
     // rarity: 数值越小越稀有（1=3灯人格, 2=WAW, 3=2灯/HE, 4=TETH, 5=1灯/ZAYIN）
     const roll = Math.random() * 100
     if (roll < 1.7) { // 人格 3灯（最稀有）
@@ -483,22 +484,27 @@ export class LimbusTool extends plugin {
     } else if (roll < 13.7) { // 人格 2灯
       const pool = db.personalities.filter(p => (p.rank ?? 0) === 2)
       return this._pick(pool, 'personality', 3)
-    } else if (roll < 61.7) { // 人格 1灯
+    } else if (roll < 84.7) { // 人格 1灯（含碎片，最低档）
       const pool = db.personalities.filter(p => (p.rank ?? 0) === 1)
       return this._pick(pool, 'personality', 5)
-    } else if (roll < 63.7) { // EGO WAW
+    } else if (roll < 85.2) { // EGO WAW
       const pool = db.egos.filter(g => g.grade === 'WAW')
       return this._pick(pool, 'ego', 2)
-    } else if (roll < 67.7) { // EGO HE
+    } else if (roll < 86.7) { // EGO HE
       const pool = db.egos.filter(g => g.grade === 'HE')
       return this._pick(pool, 'ego', 3)
-    } else if (roll < 82.7) { // EGO TETH
+    } else if (roll < 92.7) { // EGO TETH
       const pool = db.egos.filter(g => g.grade === 'TETH')
       return this._pick(pool, 'ego', 4)
-    } else { // EGO ZAYIN
-      const pool = db.egos.filter(g => g.grade === 'ZAYIN')
+    } else { // EGO ZAYIN（排除初始）
+      const pool = db.egos.filter(g => g.grade === 'ZAYIN' && !this._isInitialEgo(g.id))
       return this._pick(pool, 'ego', 5)
     }
+  }
+
+  /** 判断是否罪人初始ZAYIN EGO(20X01, 开局自带不可抽) */
+  _isInitialEgo(id) {
+    return /^20\d01$/.test(String(id))
   }
 
   _pick(pool, kind, rarity) {
