@@ -72,7 +72,7 @@ const CATEGORY_HELP = {
     title: 'E.G.O 查询帮助',
     subTitle: 'Limbus-plugin · 如何搜 E.G.O',
     list: [
-      { title: '#ego 名称', desc: '按E.G.O名称搜索，如「#ego 深沉的悲伤」' },
+      { title: '#ego 名称', desc: '按E.G.O名称搜索，如「#ego 狐雨」' },
       { title: '#ego 罪人名', desc: '列出该罪人全部 E.G.O，例「#ego 良秀」' },
       { title: '#ego <罪人> <等级>', desc: '按等级过滤，例「#ego 良秀 WAW」(ZAYIN/TETH/HE/WAW/ALEPH)' },
       { title: '#ego 片段', desc: '记不全时输入部分文字即可命中' }

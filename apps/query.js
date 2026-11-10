@@ -90,7 +90,7 @@ export class LimbusQuery2 extends plugin {
       'E.G.O', 'ego',
       q,
       buildEgoCard, 'ego/ego',
-      '用法：#ego 名称，例如 #ego 深沉的悲伤'
+      '用法：#ego 名称，例如 #ego 狐雨'
     )
   }
   async queryEnemy() {
