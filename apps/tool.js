@@ -25,6 +25,7 @@ export class LimbusTool extends plugin {
         { reg: `^${rulePrefix}(?:配队|队伍)\\s*(.*)$`, fnc: 'teamInfo' },
         { reg: `^${rulePrefix}(?:抽卡预算|预算)\\s*(.*)$`, fnc: 'gachaBudget' },
         { reg: `^${rulePrefix}(?:探索事件|事件)\\s*(.*)$`, fnc: 'exploreEvent' },
+        { reg: `^${rulePrefix}(?:图鉴)\s*(.*)$`, fnc: 'catalogBrowse' },
         { reg: `^${rulePrefix}抽卡(?:\\s+(.*))?$`, fnc: 'gacha' }
       ]
     })
@@ -237,6 +238,40 @@ export class LimbusTool extends plugin {
   }
 
   /** 抽卡模拟：#抽卡 单抽 / #抽卡 十连 */
+  /** #图鉴：全量人格图鉴浏览。无参=稀有度概览；N灯=列该稀有度人格；罪人名=该罪人人格 */
+  async catalogBrowse() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const q = this._stripKw(this.e.msg, '图鉴').trim()
+    const atkNameMap = { SLASH: '斩', PENETRATE: '突', HIT: '打' }
+    // 1) 罪人名 → 该罪人人格列表
+    if (q) {
+      const cid = db.resolveSinner(q)
+      if (cid) {
+        const list = db.personalitiesOfSinner(cid)
+        const lines = list.map((p, i) => `${i + 1}. ${p.name}（${p.rank}灯 ${p.season === 0 ? '' : 'S' + p.season}）`)
+        await this.reply(`【${SINNER_NAMES[cid] || q}】\n` + (lines.join('\n') || '无人格'))
+        return true
+      }
+      // 2) N灯 → 稀有度筛选
+      const lm = q.match(/^(\d{1,2})灯?$/)
+      if (lm) {
+        const rank = Number(lm[1])
+        const list = db.personalities.filter(p => (p.rank ?? 0) === rank)
+        const lines = list.map((p, i) => `${i + 1}. ${p.name}`)
+        await this.reply(`【${rank}灯人格（${list.length}）】\n` + lines.join('\n'))
+        return true
+      }
+      await this.reply(`没有「${q}」。\n用法：#图鉴 <罪人名> 或 #图鉴 N灯`)
+      return true
+    }
+    // 3) 无参 → 稀有度概览
+    const cnt = {}
+    db.personalities.forEach(p => { const r = p.rank ?? 0; cnt[r] = (cnt[r] || 0) + 1 })
+    const lines = Object.entries(cnt).sort((a, b) => a[0] - b[0]).map(([r, n]) => `${r}灯：${n} 个`)
+    await this.reply(`【人格图鉴概览】\n${lines.join('\n')}\n\n用法：#图鉴 3灯 看全部3灯人格；#图鉴 良秀 看该罪人人格`)
+    return true
+  }
+
   async gacha() {
     if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
     const arg = this._stripKw(this.e.msg, '抽卡').trim()
