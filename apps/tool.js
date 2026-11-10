@@ -19,7 +19,7 @@ export class LimbusTool extends plugin {
         { reg: `^${rulePrefix}(?:技能)\\s*(.+)$`, fnc: 'skillSearch' },
         { reg: `^${rulePrefix}随机(?:人格|身份)\\s*$`, fnc: 'randomPersonality' },
         { reg: `^${rulePrefix}随机(?:ego|EGO)\\s*$`, fnc: 'randomEgo' },
-        { reg: `^${rulePrefix}(?:罪人总览|罪人)$`, fnc: 'sinnerOverview' },
+        { reg: `^${rulePrefix}(?:罪人总览|罪人)\s*(.*)$`, fnc: 'sinnerOverview' },
         { reg: `^${rulePrefix}(?:流派)\\s*(.*)$`, fnc: 'flowInfo' },
         { reg: `^${rulePrefix}(?:配队|队伍)\\s*(.*)$`, fnc: 'teamInfo' },
         { reg: `^${rulePrefix}(?:抽卡预算|预算)\\s*(.*)$`, fnc: 'gachaBudget' },
