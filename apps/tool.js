@@ -27,6 +27,7 @@ export class LimbusTool extends plugin {
         { reg: `^${rulePrefix}(?:抽卡预算|预算)\\s*(.*)$`, fnc: 'gachaBudget' },
         { reg: `^${rulePrefix}(?:探索事件|事件)\\s*(.*)$`, fnc: 'exploreEvent' },
         { reg: `^${rulePrefix}(?:图鉴)\s*(.*)$`, fnc: 'catalogBrowse' },
+        { reg: `^${rulePrefix}(?:ego图鉴|EGO图鉴)\s*(.*)$`, fnc: 'catalogEgo' },
         { reg: `^${rulePrefix}抽卡(?:\\s+(.*))?$`, fnc: 'gacha' }
       ]
     })
@@ -239,6 +240,41 @@ export class LimbusTool extends plugin {
   }
 
   /** 抽卡模拟：#抽卡 单抽 / #抽卡 十连 */
+  /** #ego图鉴：全量EGO图鉴（支持分页）。无参=等级概览；WAW等=列该等级；罪人名=该罪人EGO */
+  async catalogEgo() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const q = this._stripKw(this.e.msg, 'ego图鉴|EGO图鉴').trim()
+    const GRADE = ['ZAYIN','TETH','HE','WAW','ALEPH']
+    if (q) {
+      const cid = db.resolveSinner(q)
+      if (cid) {
+        const list = db.egosOfSinner(cid)
+        const ids = list.map(g => g.id)
+        if (!ids.length) { await this.reply('该罪人无EGO'); return true }
+        return this._renderCatalogPage(ids, SINNER_NAMES[cid] + '·E.G.O', {
+          kindName: 'E.G.O', render: buildEgoCard, tpl: 'ego/ego',
+          label: (id, i) => { const g = db.getEgo(id); return `${i + 1}. ${g.name}（${g.grade}）` }
+        })
+      }
+      const up = q.toUpperCase()
+      if (GRADE.includes(up)) {
+        const ids = db.egos.filter(g => g.grade === up).map(g => g.id)
+        if (!ids.length) { await this.reply(`没有${up}等级EGO`); return true }
+        return this._renderCatalogPage(ids, `${up}·E.G.O`, {
+          kindName: 'E.G.O', render: buildEgoCard, tpl: 'ego/ego',
+          label: (id, i) => { const g = db.getEgo(id); return `${i + 1}. ${g.name}（${g.charName}）` }
+        })
+      }
+      await this.reply(`没有「${q}」。\n用法：#ego图鉴 WAW 或 #ego图鉴 <罪人名>`)
+      return true
+    }
+    const cnt = {}
+    db.egos.forEach(g => { cnt[g.grade] = (cnt[g.grade] || 0) + 1 })
+    const lines = GRADE.filter(g => cnt[g]).map(g => `${g}：${cnt[g]} 个`)
+    await this.reply(`【E.G.O图鉴概览】\n${lines.join('\n')}\n\n用法：#ego图鉴 WAW 看全部WAW；#ego图鉴 良秀 看该罪人（翻页 #下一页）`)
+    return true
+  }
+
   /** #图鉴：全量人格图鉴浏览（支持分页）。无参=稀有度概览；N灯/罪人名=分页列出（#下一页/上一页/第N页/序号） */
   async catalogBrowse() {
     if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
@@ -272,16 +308,18 @@ export class LimbusTool extends plugin {
   }
 
   /** 渲染图鉴人格分页：存 selection，显示当前页前8个，支持翻页/序号选择 */
-  async _renderCatalogPage(ids, title) {
+  /** 渲染图鉴分页（通用）：存 selection，显示当前页前8个，支持翻页/序号选择。opts: {kindName, render, tpl, label} */
+  async _renderCatalogPage(ids, title, opts = {}) {
     const PAGE = 8
+    const kindName = opts.kindName || '人格'
+    const render = opts.render || buildPersonalityCard
+    const tpl = opts.tpl || 'personality/personality'
+    const label = opts.label || ((id, i) => { const p = db.getPersonality(id); return `${i + 1}. ${p.name}（${p.rank}灯 ${p.season === 0 ? '' : 'S' + p.season}）` })
     const page = 0
     const totalPages = Math.max(1, Math.ceil(ids.length / PAGE))
     const shown = ids.slice(0, PAGE)
-    rememberSelect(this.e.user_id, { ids, kindName: '人格', render: buildPersonalityCard, tpl: 'personality/personality', page, pageSize: PAGE })
-    const lines = shown.map((id, i) => {
-      const p = db.getPersonality(id)
-      return `${i + 1}. ${p.name}（${p.rank}灯 ${p.season === 0 ? '' : 'S' + p.season}）`
-    })
+    rememberSelect(this.e.user_id, { ids, kindName, render, tpl, page, pageSize: PAGE })
+    const lines = shown.map((id, i) => label(id, i))
     const more = ids.length > PAGE ? `\n…等 ${ids.length} 个 · 回复 下一页/上一页/第N页 翻页，序号查看详情` : ''
     await this.reply(`【${title}】第 ${page + 1}/${totalPages} 页\n` + lines.join('\n') + more)
     return true
