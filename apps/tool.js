@@ -115,14 +115,31 @@ export class LimbusTool extends plugin {
   /** #罪人：列出 12 位罪人（文本总览） */
   async sinnerOverview() {
     if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
-    const lines = []
-    for (let cid = 1; cid <= 12; cid++) {
-      const n = db.personalitiesOfSinner(cid).length
-      const e = db.egosOfSinner(cid).length
-      const name = SINNER_NAMES[cid] || `罪人${cid}`
-      lines.push(`${name}：人格 ${n} · E.G.O ${e}`)
+    const q = this._stripKw(this.e.msg, '罪人总览|罪人').trim()
+    // 无参数 → 十二罪人总览
+    if (!q) {
+      const lines = []
+      for (let cid = 1; cid <= 12; cid++) {
+        const n = db.personalitiesOfSinner(cid).length
+        const e = db.egosOfSinner(cid).length
+        const name = SINNER_NAMES[cid] || `罪人${cid}`
+        lines.push(`${name}：人格 ${n} · E.G.O ${e}`)
+      }
+      await this.reply(`【十二罪人】\n${lines.join('\n')}\n\n用法：#罪人 <罪人名> 看详情，如 #罪人 良秀`)
+      return true
     }
-    await this.reply(`【十二罪人】\n${lines.join('\n')}\n\n用法：#人格 <罪人名> 看人格列表，如 #人格 良秀`)
+    // 有参数 → 罪人详情：该罪人的全部人格 + EGO
+    const cid = db.resolveSinner(q)
+    if (!cid) { await this.reply(`没有「${q}」这个罪人。\n可用罪人：${Object.values(SINNER_NAMES).join(' / ')}`); return true }
+    const pList = db.personalitiesOfSinner(cid)
+    const eList = db.egosOfSinner(cid)
+    const body = [`【${SINNER_NAMES[cid]}】`]
+    body.push(`人格（${pList.length}）：`)
+    pList.forEach(p => body.push(`· ${p.name}`))
+    body.push(`E.G.O（${eList.length}）：`)
+    eList.forEach(g => body.push(`· ${g.name}（${g.grade || '?'}）`))
+    body.push(`\n用法：#人格 <名> / #ego <名> 查看详情`)
+    await this.reply(body.join('\n'))
     return true
   }
 
