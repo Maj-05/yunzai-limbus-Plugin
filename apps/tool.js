@@ -1,7 +1,7 @@
 import { rulePrefix } from '../utils/common.js'
 import runtimeRender from '../utils/runtimeRender.js'
 import db from '../lib/db.mjs'
-import { buildPersonalityCard, buildEgoCard, artUrl } from '../lib/cards.mjs'
+import { buildPersonalityCard, buildEgoCard, buildEnemyCard, artUrl } from '../lib/cards.mjs'
 import { readData, SINNER_NAMES } from '../lib/constants.mjs'
 import { rememberSelect } from '../lib/selection.mjs'
 
@@ -28,6 +28,7 @@ export class LimbusTool extends plugin {
         { reg: `^${rulePrefix}(?:探索事件|事件)\\s*(.*)$`, fnc: 'exploreEvent' },
         { reg: `^${rulePrefix}(?:图鉴)\s*(.*)$`, fnc: 'catalogBrowse' },
         { reg: `^${rulePrefix}(?:ego图鉴|EGO图鉴)\s*(.*)$`, fnc: 'catalogEgo' },
+        { reg: `^${rulePrefix}(?:敌图鉴)\s*(.*)$`, fnc: 'catalogEnemy' },
         { reg: `^${rulePrefix}抽卡(?:\\s+(.*))?$`, fnc: 'gacha' }
       ]
     })
@@ -240,6 +241,30 @@ export class LimbusTool extends plugin {
   }
 
   /** 抽卡模拟：#抽卡 单抽 / #抽卡 十连 */
+  /** #敌图鉴：全量敌人图鉴（支持分页）。无参=类型概览；异常体/部位/人类/头目=列该类型 */
+  async catalogEnemy() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const q = this._stripKw(this.e.msg, '敌图鉴').trim()
+    const TYPE_LABEL = { abno: '异常体', part: '部位', human: '人类', human_boss: '头目' }
+    if (q) {
+      const tkw = db.enemyTypeKeyword(q)
+      if (tkw) {
+        const ids = db.enemiesOfType(tkw.type)
+        if (!ids.length) { await this.reply(`没有「${tkw.label}」类型敌人`); return true }
+        return this._renderCatalogPage(ids, `${tkw.label}敌人`, {
+          kindName: '敌人', render: buildEnemyCard, tpl: 'enemy/enemy',
+          label: (id, i) => { const e = db.getEnemy(id); return `${i + 1}. ${e.name}` }
+        })
+      }
+      await this.reply(`没有「${q}」。\n用法：#敌图鉴 <异常体/部位/人类/头目>`)
+      return true
+    }
+    const c = db.enemyTypeCounts()
+    const lines = Object.entries(c).map(([k, v]) => `· ${v.label}：${v.count} 个`)
+    await this.reply(`【敌人图鉴概览】\n${lines.join('\n')}\n\n用法：#敌图鉴 异常体 看全部异常体（翻页 #下一页）`)
+    return true
+  }
+
   /** #ego图鉴：全量EGO图鉴（支持分页）。无参=等级概览；WAW等=列该等级；罪人名=该罪人EGO */
   async catalogEgo() {
     if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
