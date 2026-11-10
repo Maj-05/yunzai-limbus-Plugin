@@ -87,8 +87,10 @@ export class LimbusQuery extends plugin {
     const sel = peekSelect(this.e.user_id)
     if (!sel) return false
     if (!db.load()) return false
-    const id = sel.ids[n - 1]
-    if (id == null) { await this.reply('序号超出范围（1-' + sel.ids.length + '）'); return true }
+    const pageSize = sel.pageSize || sel.ids.length
+    const offset = (sel.page || 0) * pageSize
+    const id = sel.ids[offset + n - 1]
+    if (id == null) { await this.reply('序号超出范围（1-' + Math.min(pageSize, sel.ids.length - offset) + '）'); return true }
     const card = sel.render(id)
     if (!card) { await this.reply('数据缺失，请联系管理员更新图鉴'); clearSelect(this.e.user_id); return true }
     clearSelect(this.e.user_id)
