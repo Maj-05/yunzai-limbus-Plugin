@@ -22,12 +22,28 @@
 .gacha-card.rare {
   box-shadow: 0 0 22px currentColor, 0 2px 10px rgba(40,60,100,.10), inset 0 0 26px rgba(255,255,255,.35);
 }
-/* 碎片卡：灰色专属底纹 */
+/* 碎片卡：灰色专属底纹；有立绘时贴罪人初始图 */
 .gacha-card.shard {
   background: linear-gradient(180deg, #f2f4f8, #e2e6ec);
 }
+.gacha-card.shard .gacha-art img.shard-img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  filter: saturate(.82) brightness(.98);
+}
+/* 碎片角标：浮在立绘右上（无图时降级为居中文字） */
+.gacha-card.shard .gacha-art .shard-ico {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; color: #9aa3b2; font-size: 16px; font-weight: 800;
+  letter-spacing: 1px;
+}
+.gacha-card.shard .gacha-art.has-img .shard-ico {
+  position: absolute; top: 6px; right: 6px; height: auto; width: auto;
+  background: rgba(255,255,255,.9); border-radius: 8px;
+  padding: 2px 7px; font-size: 11px; color: #8a93a6;
+}
 
 .gacha-art {
+  position: relative;
   width: 100%;
   aspect-ratio: 3/4;
   overflow: hidden;
@@ -35,12 +51,6 @@
 }
 .gacha-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .gacha-art.no-art { background: #e8edf4; }
-
-.gacha-card.shard .gacha-art .shard-ico {
-  display: flex; align-items: center; justify-content: center;
-  height: 100%; color: #9aa3b2; font-size: 16px; font-weight: 800;
-  letter-spacing: 1px;
-}
 
 .gacha-rarity {
   position: absolute;

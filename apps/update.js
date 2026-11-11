@@ -1,5 +1,6 @@
 import { rulePrefix } from '../utils/common.js'
 import db from '../lib/db.mjs'
+import { checkDataAge } from '../lib/version_check.mjs'
 import { PLUGIN_ROOT } from '../lib/constants.mjs'
 import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
@@ -58,6 +59,7 @@ export class LimbusUpdate extends plugin {
         { reg: `^${rulePrefix}limbus(?:强制)?更新(数据)?$`, fnc: 'update', permission: 'master' },
         { reg: `^${rulePrefix}limbus强制更新$`, fnc: 'update', permission: 'master' },
         { reg: `^${rulePrefix}limbus版本$`, fnc: 'version' },
+        { reg: `^${rulePrefix}limbus更新记录$`, fnc: 'changelog' },
         { reg: `^${rulePrefix}图鉴状态$`, fnc: 'status' }
       ]
     })
@@ -70,16 +72,43 @@ export class LimbusUpdate extends plugin {
       return true
     }
     const s = db.stats()
-    await this.reply(
-      `【边狱图鉴数据】\n人格: ${s.personalities}\nE.G.O: ${s.egos}\n敌人: ${s.enemies}\n饰品: ${s.egogifts}\n` +
-      (s.builtAt ? `构建时间: ${s.builtAt}` : '')
-    )
+    const age = checkDataAge()
+    const body = [
+      `【边狱图鉴数据】`,
+      `人格: ${s.personalities}`,
+      `E.G.O: ${s.egos}`,
+      `敌人: ${s.enemies}`,
+      `饰品: ${s.egogifts}`
+    ]
+    if (s.builtAt) body.push(`构建时间: ${s.builtAt}`)
+    if (age.sourceVersion) {
+      body.push(`数据版本: ${age.sourceVersion}（${age.label}）`)
+      if (age.stale) body.push(`⚠ 数据已 ${age.days} 天未更新，可能缺新人格/技能，建议管理员执行 #limbus更新 重建数据。`)
+    }
+    await this.reply(body.join('\n'))
     return true
   }
 
   async version() {
     const info = this._gitInfo()
     await this.reply(`limbus-plugin 当前版本: ${info}`)
+    return true
+  }
+
+  /** #limbus更新记录：读取 CHANGELOG.md 返回更新日志 */
+  async changelog() {
+    try {
+      const p = path.join(PLUGIN_ROOT, 'CHANGELOG.md')
+      if (!fs.existsSync(p)) {
+        await this.reply('暂无更新记录（CHANGELOG.md 缺失）')
+        return true
+      }
+      const text = fs.readFileSync(p, 'utf8')
+      await this.reply(`【limbus-plugin 更新记录】\n${text.trim()}`)
+    } catch (e) {
+      logger.error(`[limbus-plugin] 读取 CHANGELOG 失败: ${e.message}`)
+      await this.reply('读取更新记录失败')
+    }
     return true
   }
 

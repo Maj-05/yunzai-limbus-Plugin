@@ -1,0 +1,35 @@
+/* 人格对比（两列并排） */
+.cmp-head { text-align: center; margin-bottom: 14px; }
+.cmp-title { font-size: 30px; font-weight: 800; color: #1d3557; letter-spacing: 3px; }
+
+.cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+
+.cmp-col { border-radius: 14px; overflow: hidden; border: 2px solid rgba(120,140,180,.25); background: #fff; box-shadow: 0 3px 12px rgba(40,60,100,.10); }
+
+.cmp-art { position: relative; min-height: 110px; overflow: hidden; }
+.cmp-img { display: block; width: 100%; height: auto; }
+.cmp-overlay { position: absolute; left: 0; right: 0; bottom: 0; padding: 24px 14px 12px; background: linear-gradient(transparent, rgba(30,50,90,.82)); }
+.cmp-name { font-size: 17px; font-weight: 800; color: #fff; letter-spacing: 1px; text-shadow: 0 2px 8px rgba(0,0,30,.5); }
+.cmp-label { margin-top: 6px; }
+.cmp-label .badge { font-size: 10px; }
+
+.cmp-stats { display: flex; gap: 6px; padding: 10px 12px; }
+.cmp-stat { flex: 1; text-align: center; background: #f5f7fb; border-radius: 8px; padding: 7px 4px; }
+.cmp-stat span { display: block; font-size: 11px; color: #6a7890; }
+.cmp-stat b { display: block; font-size: 18px; font-weight: 800; color: #2a4a7f; }
+.cmp-stat em { font-style: normal; display: block; font-size: 10px; color: #8a96ad; }
+
+.cmp-resist { display: flex; gap: 6px; padding: 0 12px 12px; }
+.cmp-r { flex: 1; text-align: center; padding: 5px 2px; border-radius: 7px; background: #fff; border: 1px solid rgba(120,140,180,.2); font-size: 11px; }
+.cmp-r span { display: block; color: #6a7890; }
+.cmp-r b { display: block; font-weight: 800; }
+.cmp-r.weak b { color: #d04a4a; }
+.cmp-r.resist b { color: #3aa07a; }
+.cmp-r.normal b { color: #4a5a7a; }
+
+.cmp-skills { padding: 0 12px 14px; }
+.cmp-skill { background: #f7f9fc; border-left: 3px solid #4a86c8; border-radius: 8px; padding: 7px 9px; margin-bottom: 7px; }
+.cmp-sh { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-bottom: 5px; }
+.cmp-sn { font-size: 12px; font-weight: 800; color: #2a2d3a; }
+.cmp-snums { font-size: 11px; color: #8a96ad; margin-left: auto; }
+.cmp-sd { font-size: 12px; color: #3a4050; line-height: 1.5; white-space: pre-wrap; }

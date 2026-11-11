@@ -108,10 +108,10 @@ export async function buildAll (upstreamDir, outDir) {
     for (const s of stat) {
       const cn = persName.get(s.id) || {}
       const cname = cn.name || SINNER_NAMES[s.characterId] || `罪人${s.characterId}`
-      // 完整名 = 罪人名 + 完整标题（如「希斯克利夫R公司第四集团军兔子队」）；LCB罪人保持罪人名
+      // 完整名 = 罪人名 + 空格 + 完整标题（如「希斯克利夫 R公司第四集团军兔子队」）；LCB罪人保持罪人名
       const titleRaw = (cn.title || '').replace(/\//g, '').replace(/\s+/g, '')
       const isLCB = titleRaw === 'LCB罪人' || !titleRaw
-      const name = isLCB ? cname : cname + titleRaw
+      const name = isLCB ? cname : cname + ' ' + titleRaw
       const skills = []
       for (const attr of s.attributeList || []) {
         // skillId → skill tier 从 personality-skill-XX 找 skillTier

@@ -13,8 +13,9 @@
 <div class="gacha-grid {{gachaMulti ? '' : 'single'}}">
   {{each results r i}}
   <div class="gacha-card {{r.isRare ? 'rare' : ''}} {{r.isShard ? 'shard' : ''}}" style="border-color:{{r.rarityColor}};color:{{r.rarityColor}}">
-    <div class="gacha-art">
-      {{if r.isShard}}<div class="shard-ico">碎片</div>{{else}}<img src="{{r.art}}" onerror="this.style.display='none';this.parentNode.classList.add('no-art')"/>{{/if}}
+    <div class="gacha-art {{r.isShard && r.art ? 'has-img' : ''}} {{r.isShard ? 'shard' : ''}}">
+      {{if r.isShard && r.art}}<img class="shard-img" src="{{r.art}}" onerror="this.style.display='none';this.parentNode.classList.remove('has-img');this.parentNode.classList.add('no-art');"/>{{else if r.isShard}}<div class="shard-ico">碎片</div>{{else}}<img src="{{r.art}}" onerror="this.style.display='none';this.parentNode.classList.add('no-art')"/>{{/if}}
+      {{if r.isShard && r.art}}<div class="shard-ico">碎片</div>{{/if}}
     </div>
     <div class="gacha-rarity" style="background:{{r.rarityColor}}">{{r.rarityName}}</div>
     <div class="gacha-name" style="color:{{r.rarityColor}}">{{r.name}}</div>

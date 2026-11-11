@@ -1,0 +1,59 @@
+{{extend defaultLayout}}
+
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{pluResPath}}personality/personality.css"/>
+<link rel="stylesheet" type="text/css" href="{{pluResPath}}compare/compare.css"/>
+{{/block}}
+
+{{block 'main'}}
+<div class="cmp-head">
+  <div class="cmp-title">人格对比</div>
+</div>
+<div class="cmp-grid">
+  {{each pair col}}
+  <div class="cmp-col">
+    <div class="cmp-art" style="background:{{col.card.rankColor}}">
+      {{if col.card.showArt}}
+      <img class="cmp-img" src="{{pluResPath}}art/{{col.card.art.normal}}" onerror="this.style.display='none';"/>
+      {{/if}}
+      <div class="cmp-overlay">
+        <div class="cmp-name">{{col.card.name}}</div>
+        <div class="cmp-label">
+          <span class="badge" style="background:{{col.card.rankColor}}">{{col.card.rankName}}</span>
+          <span class="badge" style="background:#3a3a52">{{col.card.charName}}</span>
+          <span class="badge" style="background:#3a3a52">{{col.card.seasonLabel}}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmp-stats">
+      <div class="cmp-stat"><span>生命</span><b>{{col.card.hp}}</b><em>+{{col.card.hpInc}}/级</em></div>
+      <div class="cmp-stat"><span>防御</span><b>{{col.card.def}}</b></div>
+      <div class="cmp-stat"><span>速度</span><b>{{col.card.speed}}</b></div>
+    </div>
+
+    <div class="cmp-resist">
+      {{each col.card.resist r}}
+      <div class="cmp-r {{r.cls}}"><span>{{r.type}}</span><b>×{{r.value}}</b></div>
+      {{/each}}
+    </div>
+
+    <div class="cmp-skills">
+      {{each col.card.skills s}}
+      <div class="cmp-skill">
+        <div class="cmp-sh">
+          <span class="slot">{{s.slot === 0 ? '追撃' : ((4 - s.slot) + '技能')}}</span>
+          <span class="badge" style="background:{{s.sinColor}}">{{s.sinName}}</span>
+          <span class="badge" style="background:#3a3a52">{{s.atkName}}</span>
+          <span class="cmp-sn">{{s.name}}</span>
+          <span class="cmp-snums">威{{s.power}}·基{{s.base}}·币{{s.coin}}</span>
+        </div>
+        {{each s.descLines dl}}<div class="cmp-sd {{dl.coin ? 'sd-coin' : ''}}">{{dl.text}}</div>{{/each}}
+      </div>
+      {{/each}}
+    </div>
+  </div>
+  {{/each}}
+</div>
+<div class="copyright">{{@sys.copyright}}</div>
+{{/block}}

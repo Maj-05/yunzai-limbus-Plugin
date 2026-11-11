@@ -1,7 +1,7 @@
 {
   "name": "limbus-plugin",
-  "version": "1.4.0",
-  "description": "Yunzai(TRSS/Miao)插件·边狱巴士Limbus Company图鉴百科：人格/E.G.O/敌人/饰品离线查询、模糊搜索、敌人类型筛选、赛季/稀有度/等级过滤、状态速查、罪人总览、随机查询、饰品流派推荐、配队、抽卡模拟、攒抽计算、探索事件速查、多结果分页 —— 数值来自社区静态数据，文本来自LLC中文化包",
+  "version": "1.5.0",
+  "description": "Yunzai(TRSS/Miao)插件·边狱巴士Limbus Company图鉴百科：人格/E.G.O/敌人/饰品离线查询、模糊搜索、敌人类型筛选、赛季/稀有度/等级过滤、状态速查、罪人总览、随机查询、饰品流派推荐与图鉴、配队、抽卡模拟、攒抽计算、探索事件速查、立绘画廊、人格图像对比、多结果分页、数据版本/数据龄提示 —— 数值来自社区静态数据，文本来自LLC中文化包",
   "type": "module",
   "main": "index.js",
   "dependencies": {

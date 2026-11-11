@@ -61,8 +61,10 @@ if (Array.isArray(flows)) {
 }
 
 if (Array.isArray(events)) {
+  const STAGES = ['基础', '活动卡包', '主线']
   for (const e of events) {
     if (!Array.isArray(e.options) || !e.options.length) errors.push(`events[${e.name}] options 必须是非空数组`)
+    if (e.stage && !STAGES.includes(e.stage)) errors.push(`events[${e.name}] stage 非法: ${e.stage}`)
     for (const [j, o] of (e.options || []).entries()) {
       if (!o || !o.text || !o.result) errors.push(`events[${e.name}].options[${j}] 缺少 text/result`)
     }

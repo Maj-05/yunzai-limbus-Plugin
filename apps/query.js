@@ -3,6 +3,7 @@ import { rulePrefix } from '../utils/common.js'
 import runtimeRender from '../utils/runtimeRender.js'
 import { buildEgoCard, buildEnemyCard, buildGiftCard, buildGiftList, buildSinnerEgoList, suggestions } from '../lib/cards.mjs'
 import { rememberSelect, peekSelect, clearSelect, updatePage } from '../lib/selection.mjs'
+import { findFlow, buildGiftFlowIndex, listFlows } from '../lib/gift_flow.mjs'
 
 export class LimbusQuery2 extends plugin {
   constructor() {
@@ -136,6 +137,13 @@ export class LimbusQuery2 extends plugin {
     // 列表关键词兜底（#饰品 列表 等带空格写法）
     const raw = this._strip(this.e.msg, '饰品|egogift|EGO饰品')
     if (/^(列表|list|全部)$/i.test(raw)) return this.giftList()
+    // 流派概览：#饰品 流派 → 列出所有流派及各数量
+    if (/^(流派|流派列表)$/i.test(raw)) return this._giftFlowOverview()
+    // 流派图鉴：#饰品 <流派名> → 列出该流派全部饰品（文本 + 翻页）
+    if (raw) {
+      const flow = findFlow(raw)
+      if (flow) return this._giftFlowView(flow)
+    }
     return this._query(
       { search: db.searchGift.bind(db), get: db.getGift.bind(db) },
       '饰品', 'gift',
@@ -143,6 +151,36 @@ export class LimbusQuery2 extends plugin {
       buildGiftCard, 'gift/gift',
       '用法：#饰品 名称，例如 #饰品 信徒面具'
     )
+  }
+
+  /** #饰品 流派：各流派数量概览 */
+  async _giftFlowOverview() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const idx = buildGiftFlowIndex()
+    const flows = listFlows()
+    const lines = flows.map(f => `· ${f.name}：${(idx[f.key] || []).length} 件`).join('\n')
+    await this.reply(`【镜牢饰品流派】\n${lines}\n\n用法：#饰品 <流派名> 看该流派全部饰品，如 #饰品 烧伤 / 流血 / 震颤`)
+    return true
+  }
+
+  /** #饰品 <流派>：列该流派全部饰品（文本），存 selection 支持翻页/序号查看详情 */
+  async _giftFlowView(flow) {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const idx = buildGiftFlowIndex()
+    const list = idx[flow.key] || []
+    if (!list.length) { await this.reply(`「${flow.name}」流派暂无饰品`); return true }
+    const ids = list.map(g => g.id)
+    const PAGE = 8
+    const page = 0
+    const totalPages = Math.max(1, Math.ceil(ids.length / PAGE))
+    const shown = ids.slice(0, PAGE)
+    rememberSelect(this.e.user_id, { ids, kindName: '饰品', render: buildGiftCard, tpl: 'gift/gift', page, pageSize: PAGE })
+    const names = {}
+    for (const g of list) names[g.id] = g.name
+    const lines = shown.map((id, i) => `${i + 1}. ${names[id]}`)
+    const more = ids.length > PAGE ? `\n…等 ${ids.length} 件 · 回复 下一页/上一页/第N页 翻页，序号查看详情` : ''
+    await this.reply(`【${flow.name}流饰品】${flow.desc}\n共 ${ids.length} 件（第 ${page + 1}/${totalPages} 页）\n${lines.join('\n')}${more}`)
+    return true
   }
 
   async status() {

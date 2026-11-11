@@ -4,6 +4,7 @@ import db from '../lib/db.mjs'
 import { buildPersonalityCard, buildEgoCard, buildEnemyCard, artUrl } from '../lib/cards.mjs'
 import { readData, SINNER_NAMES } from '../lib/constants.mjs'
 import { rememberSelect } from '../lib/selection.mjs'
+import { buildGalleryAll, buildGallerySinner, buildGalleryRandom } from '../lib/gallery.mjs'
 
 /**
  * 工具类命令：状态速查 / 随机查询 / 罪人总览
@@ -29,6 +30,7 @@ export class LimbusTool extends plugin {
         { reg: `^${rulePrefix}(?:图鉴)\s*(.*)$`, fnc: 'catalogBrowse' },
         { reg: `^${rulePrefix}(?:ego图鉴|EGO图鉴)\s*(.*)$`, fnc: 'catalogEgo' },
         { reg: `^${rulePrefix}(?:敌图鉴)\s*(.*)$`, fnc: 'catalogEnemy' },
+        { reg: `^${rulePrefix}(?:画廊)\s*(.*)$`, fnc: 'gallery' },
         { reg: `^${rulePrefix}抽卡(?:\\s+(.*))?$`, fnc: 'gacha' }
       ]
     })
@@ -141,6 +143,26 @@ export class LimbusTool extends plugin {
     const card = buildEgoCard(id)
     if (!card) { await this.reply('数据缺失'); return true }
     await runtimeRender(this.e, 'ego/ego', { card }, { scale: 1.4 })
+    return true
+  }
+
+  /** #画廊 [罪人|随机]：人格立绘墙（本地缓存缺失时走在线热链，onerror 隐藏空图） */
+  async gallery() {
+    if (!db.load()) { await this.reply('图鉴数据未就绪'); return true }
+    const q = this._stripKw(this.e.msg, '画廊').trim()
+    let data
+    if (/^随机$/i.test(q)) {
+      data = buildGalleryRandom()
+      if (!data) { await this.reply('人格数据为空'); return true }
+    } else if (q) {
+      const cid = db.resolveSinner(q)
+      if (!cid) { await this.reply(`没有「${q}」这个罪人。\n用法：#画廊 或 #画廊 <罪人名> 或 #画廊 随机`); return true }
+      data = buildGallerySinner(cid)
+    } else {
+      data = buildGalleryAll()
+    }
+    if (!data || !data.groups.length) { await this.reply('画廊暂无数据'); return true }
+    await runtimeRender(this.e, 'gallery/gallery', data, { scale: 1.3 })
     return true
   }
 
@@ -370,7 +392,18 @@ export class LimbusTool extends plugin {
     const results = Array.from({ length: n }, () => this._rollOnce())
     // 单抽/十连统一走 gacha 卡片模板（单抽即 1 张大卡），风格一致
     const cards = results.map(r => {
-      if (r.kind === 'shard') return { art: '', name: r.name || '人格碎片', rarityName: '碎片', rarityColor: '#a8a8a8', isRare: false, isShard: true }
+      if (r.kind === 'shard') {
+        // 碎片卡：贴上该罪人初始人格立绘（shardCharId → 该罪人 rank 最低=初始人格），无本地图走热链
+        let shardArt = ''
+        if (r.shardCharId) {
+          const sins = db.personalitiesOfSinner(r.shardCharId)
+          if (sins.length) {
+            const base = sins.reduce((a, b) => (b.id < a.id ? b : a))
+            shardArt = artUrl(base.id, 'normal')
+          }
+        }
+        return { art: shardArt, name: r.name || '人格碎片', rarityName: '碎片', rarityColor: '#a8a8a8', isRare: false, isShard: true }
+      }
       const art = r.kind === 'ego' ? artUrl(r.id, 'awaken_profile') : artUrl(r.id, 'normal')
       const rar = r.kind === 'ego' ? (r.grade || '?') : `${r.rank}灯`
       const SIN_COLOR = { WRATH:'#d8433c', LUST:'#8a5a33', SLOTH:'#e2c23a', GLUTTONY:'#4caf50', GLOOM:'#6fb3e8', PRIDE:'#2b3d8f', ENVY:'#9b5bb8', CRIMSON:'#d8433c', AMBER:'#8a5a33', SCARLET:'#e2c23a', SHAMROCK:'#4caf50', AZURE:'#6fb3e8', INDIGO:'#2b3d8f', VIOLET:'#9b5bb8', NEUTRAL:'#888' }
@@ -486,17 +519,17 @@ export class LimbusTool extends plugin {
     } else if (roll < 13.7) { // 人格 2灯
       const pool = db.personalities.filter(p => (p.rank ?? 0) === 2)
       return this._pick(pool, 'personality', 3)
-    } else if (roll < 91) { // 人格碎片（1灯初始人格不可抽，全部为碎片）
-      const shardKinds = ['人格碎片', '人格碎片', '人格碎片', '人格碎片', '十连券碎片']
+    } else if (roll < 93) { // 人格碎片（1灯初始人格不可抽，全部为碎片；碎片只分该罪人人格碎片，不出十连券碎片）
       const shardNames = ['李箱', '浮士德', '堂吉诃德', '良秀', '默尔索', '鸿璐', '希斯克利夫', '以实玛利', '罗佳', '辛克莱', '奥提斯', '格里高尔']
-      return { kind: 'shard', id: 0, name: `${shardNames[Math.floor(Math.random() * shardNames.length)]}·${shardKinds[Math.floor(Math.random() * shardKinds.length)]} ×${1 + Math.floor(Math.random() * 15)}`, rank: 0, rarity: 5 }
-    } else if (roll < 91.5) { // EGO WAW
+      const si = Math.floor(Math.random() * shardNames.length)
+      return { kind: 'shard', id: 0, name: `${shardNames[si]}·人格碎片 ×${1 + Math.floor(Math.random() * 15)}`, rank: 0, rarity: 5, shardCharId: si + 1 }
+    } else if (roll < 93.3) { // EGO WAW
       const pool = db.egos.filter(g => g.grade === 'WAW')
       return this._pick(pool, 'ego', 2)
-    } else if (roll < 93) { // EGO HE
+    } else if (roll < 94.3) { // EGO HE
       const pool = db.egos.filter(g => g.grade === 'HE')
       return this._pick(pool, 'ego', 3)
-    } else if (roll < 97) { // EGO TETH
+    } else if (roll < 97.3) { // EGO TETH
       const pool = db.egos.filter(g => g.grade === 'TETH')
       return this._pick(pool, 'ego', 4)
     } else { // EGO ZAYIN（排除初始）

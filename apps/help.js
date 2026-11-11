@@ -31,15 +31,18 @@ const helpList = [
       { icon: 22, title: '#配队 <流派名>', desc: '推荐该流派人格+E.G.O 组合，例:#配队 破裂 / 烧伤' },
       { icon: 23, title: '#抽卡 [十连]', desc: '抽卡模拟：单抽一张卡 / 十连，如 #抽卡 十连' },
       { icon: 24, title: '#抽卡预算 <狂气>...', desc: '攒抽估算：狂气/券→可抽数，可选剩余天数，如 #抽卡预算 13000 5 2 30' },
-      { icon: 25, title: '#事件 [随机/名]', desc: '镜牢探索事件速查：随机/查询，如 #事件 随机' }
+      { icon: 25, title: '#事件 [随机/名]', desc: '镜牢探索事件速查：随机/查询，如 #事件 随机' },
+      { icon: 26, title: '#饰品 <流派名>', desc: '按流派列出全部饰品，例:#饰品 烧伤 / 流血 / 震颤' },
+      { icon: 27, title: '#画廊 [罪人/随机]', desc: '人格立绘墙：#画廊 / #画廊 良秀 / #画廊 随机' }
     ]
   }, {
     group: '帮助与数据',
     list: [
       { icon: 16, title: '#limbus帮助 / #巴士帮助 / #084帮助', desc: '打开帮助菜单' },
       { icon: 17, title: '#limbus更新 / 强制 / 数据', desc: '(master) 更新插件+数据 / 强制 / 仅数据' },
-      { icon: 18, title: '#图鉴状态', desc: '查看数据统计' },
-      { icon: 19, title: '#limbus版本', desc: '查看插件版本号' }
+      { icon: 18, title: '#图鉴状态', desc: '查看数据统计(含数据版本/数据龄)' },
+      { icon: 19, title: '#limbus版本', desc: '查看插件版本号' },
+      { icon: 30, title: '#limbus更新记录', desc: '查看 CHANGELOG 更新日志' }
     ]
   }
 ]
