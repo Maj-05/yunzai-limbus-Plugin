@@ -483,8 +483,24 @@ export class LimbusTool extends plugin {
     const events = readEventData()
     if (!events || !events.length) { await this.reply('探索事件数据未就绪'); return true }
     if (!q || /^(随机|全部|列表)$/i.test(q)) {
-      const lines = events.map((e, i) => `${i + 1}. ${e.name}（${e.location || '镜像迷宫'}）`)
-      await this.reply(`【镜牢探索事件】\n${lines.join('\n')}\n\n用法：#事件 随机 或 #事件 <事件名>`)
+      // 按 stage 分组展示（基础 / 活动卡包 / 主线），便于浏览
+      const order = ['基础', '活动卡包', '主线']
+      const groups = {}
+      for (const e of events) {
+        const st = order.includes(e.stage) ? e.stage : '基础'
+        if (!groups[st]) groups[st] = []
+        groups[st].push(e)
+      }
+      const out = []
+      for (const st of order) {
+        if (!groups[st] || !groups[st].length) continue
+        out.push(`【${st}】`)
+        for (const e of groups[st]) {
+          const pack = e.pack ? `（${e.pack}）` : ''
+          out.push(`· ${e.name}${pack}`)
+        }
+      }
+      await this.reply(`【镜牢探索事件】\n${out.join('\n')}\n\n用法：#事件 随机 或 #事件 <事件名>`)
       return true
     }
     if (/^随机$/i.test(q)) {
