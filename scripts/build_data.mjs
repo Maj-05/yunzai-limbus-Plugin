@@ -44,6 +44,21 @@ function listDir(dir) {
 }
 
 /**
+ * 在 SD/static-data 下按目录名特征自动发现数据目录（不依赖固定名字，上游改名也能扫到）。
+ * 返回匹配到的全部子目录绝对路径（排除文件、排除 .git 等）。pattern 为目录名正则。
+ */
+function findDirs(base, pattern) {
+  const out = []
+  for (const name of listDir(base)) {
+    if (pattern.test(name)) {
+      const p = path.join(base, name)
+      try { if (fs.statSync(p).isDirectory()) out.push(p) } catch {}
+    }
+  }
+  return out
+}
+
+/**
  * 敌人类型推导。上游数值源（abnormality-unit）无独立 type 字段时，
  * 用中文文本表 Enemies.json 的 desc 与 id 结构分类：
  *   - desc 含「本体」→ 异常体本体（abno）
@@ -238,13 +253,16 @@ export async function buildAll (upstreamDir, outDir) {
       resist: []
     })
   }
-  // 数值表（abnormality-unit/*.json）合并抗性/技能；目录缺失则跳过，不让构建崩溃。
-  // 只读 abnormality-unit.json 会漏掉 mirror/refraction/walpu/wp 等赛季变体，导致敌人抗性/技能全空。
+  // 数值表（abnormality-unit 等目录）合并抗性/技能；目录缺失则跳过，不让构建崩溃。
+  // 自动发现敌人数值目录（abnormality-unit / enemy / abno / monster 等，上游改名也能扫到），
+  // 并合并目录下全部 *.json（含 mirror/refraction/walpu/wp 等赛季变体），避免敌人抗性/技能全空。
   const abnById = new Map()
-  const abnFiles = listDir(path.join(SD, 'abnormality-unit')).filter(f => f.endsWith('.json'))
-  for (const f of abnFiles) {
-    for (const a of list(readJson(path.join(SD, 'abnormality-unit', f)))) {
-      if (a.id != null) abnById.set(a.id, a)
+  const abnDirs = findDirs(SD, /abnormal|enemy|abno|monster/i)
+  for (const dir of abnDirs) {
+    for (const f of listDir(dir).filter(x => x.endsWith('.json'))) {
+      for (const a of list(readJson(path.join(dir, f)))) {
+        if (a.id != null) abnById.set(a.id, a)
+      }
     }
   }
   for (const e of enemies) {
@@ -261,14 +279,15 @@ export async function buildAll (upstreamDir, outDir) {
   const giftText2 = list(readJson(path.join(CN, 'EGOgift_MirrorDungeon_2.json')))
   const giftMap = new Map()
   for (const g of [...giftText2, ...giftText]) giftMap.set(g.id, g) // _2 优先
-  // 饰品稀有度：枚举 ego-gift-mirrordungeon 目录下所有 *.json 合并
-  // （仅读 ego-gift-mirrordungeon.json 会漏掉 2/3/4/5/6/7/extreme 等赛季饰品，导致级别全为1）
+  // 饰品稀有度：自动发现饰品数据目录（ego-gift-mirrordungeon / ego-gift 等，上游改名也能扫到），
+// 合并目录下全部 *.json（含 2/3/4/5/6/7/extreme 等赛季饰品），避免饰品级别全为 1。
   const giftRarity = new Map()
-  const giftStatFiles = listDir(path.join(SD, 'ego-gift-mirrordungeon'))
-    .filter(f => /^ego-gift-.+\.json$/.test(f))
-  for (const f of giftStatFiles) {
-    for (const g of list(readJson(path.join(SD, 'ego-gift-mirrordungeon', f)))) {
-      if (g.id != null) giftRarity.set(g.id, g.rarity ?? 0)
+  const giftDirs = findDirs(SD, /gift/i)
+  for (const dir of giftDirs) {
+    for (const f of listDir(dir).filter(x => /^ego-gift-.+\.json$/.test(x))) {
+      for (const g of list(readJson(path.join(dir, f)))) {
+        if (g.id != null) giftRarity.set(g.id, g.rarity ?? 0)
+      }
     }
   }
   for (const [gid, t] of giftMap) {
