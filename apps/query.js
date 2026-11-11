@@ -13,7 +13,7 @@ export class LimbusQuery2 extends plugin {
       event: 'message',
       priority: 500,
       rule: [
-        { reg: `^${rulePrefix}(?:ego|EGO|E\\.G\\.O)\\s*(.+)$`, fnc: 'queryEgo' },
+        { reg: `^${rulePrefix}(?:ego|EGO|E\\.G\\.O)(?!图鉴)\\s*(.+)$`, fnc: 'queryEgo' },
         { reg: `^${rulePrefix}(?:敌人|abnormality)\\s*(.+)$`, fnc: 'queryEnemy' },
         { reg: `^${rulePrefix}(?:饰品|egogift)(?:列表|list|全部)\s*(\\d{0,2})$`, fnc: 'giftList' },
         { reg: `^${rulePrefix}(?:饰品|egogift|EGO饰品)\\s*(.+)$`, fnc: 'queryGift' },
@@ -140,9 +140,13 @@ export class LimbusQuery2 extends plugin {
     // 流派概览：#饰品 流派 → 列出所有流派及各数量
     if (/^(流派|流派列表)$/i.test(raw)) return this._giftFlowOverview()
     // 流派图鉴：#饰品 <流派名> → 列出该流派全部饰品（文本 + 翻页）
+    // 优先：若 raw 精确命中某个饰品名（如未来某饰品恰叫流派词），则走普通搜索而非流派
     if (raw) {
+      const exactIds = db.searchGift(raw, 8)
+      const exactFirst = exactIds.length ? db.getGift(exactIds[0]) : null
+      const isExactName = exactFirst && exactFirst.name && exactFirst.name.replace(/\s+/g, '') === raw.replace(/\s+/g, '')
       const flow = findFlow(raw)
-      if (flow) return this._giftFlowView(flow)
+      if (flow && !isExactName) return this._giftFlowView(flow)
     }
     return this._query(
       { search: db.searchGift.bind(db), get: db.getGift.bind(db) },
@@ -174,10 +178,10 @@ export class LimbusQuery2 extends plugin {
     const page = 0
     const totalPages = Math.max(1, Math.ceil(ids.length / PAGE))
     const shown = ids.slice(0, PAGE)
-    rememberSelect(this.e.user_id, { ids, kindName: '饰品', render: buildGiftCard, tpl: 'gift/gift', page, pageSize: PAGE })
-    const names = {}
-    for (const g of list) names[g.id] = g.name
-    const lines = shown.map((id, i) => `${i + 1}. ${names[id]}`)
+    const textNames = {}
+    for (const g of list) textNames[g.id] = g.name
+    rememberSelect(this.e.user_id, { ids, kindName: '饰品', render: buildGiftCard, tpl: 'gift/gift', page, pageSize: PAGE, textNames })
+    const lines = shown.map((id, i) => `${i + 1}. ${textNames[id]}`)
     const more = ids.length > PAGE ? `\n…等 ${ids.length} 件 · 回复 下一页/上一页/第N页 翻页，序号查看详情` : ''
     await this.reply(`【${flow.name}流饰品】${flow.desc}\n共 ${ids.length} 件（第 ${page + 1}/${totalPages} 页）\n${lines.join('\n')}${more}`)
     return true
@@ -249,6 +253,12 @@ export class LimbusQuery2 extends plugin {
     if (page == null) return false
     const shown = sel.ids.slice(page * pageSize, page * pageSize + pageSize)
     if (!shown.length) { await this.reply('该页无内容'); return true }
+    // 文本型 selection（#饰品 <流派> 等）：翻页也用文本，保持前后一致
+    if (sel.textNames) {
+      const lines = shown.map((id, i) => `${i + 1}. ${sel.textNames[id] || id}`)
+      await this.reply(`第 ${page + 1}/${totalPages} 页\n${lines.join('\n')}\n（回复 下一页/上一页/第N页 继续，序号查看详情）`)
+      return true
+    }
     await runtimeRender(this.e, 'search/search', {
       kind: sel.kindName,
       keyword: `${sel.kindName}（第 ${page + 1}/${totalPages} 页）`,

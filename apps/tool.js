@@ -161,7 +161,7 @@ export class LimbusTool extends plugin {
     } else {
       data = buildGalleryAll()
     }
-    if (!data || !data.groups.length) { await this.reply('画廊暂无数据'); return true }
+    if (!data || !data.groups.length || data.total === 0) { await this.reply('画廊暂无数据'); return true }
     await runtimeRender(this.e, 'gallery/gallery', data, { scale: 1.3 })
     return true
   }
@@ -377,8 +377,11 @@ export class LimbusTool extends plugin {
     const page = 0
     const totalPages = Math.max(1, Math.ceil(ids.length / PAGE))
     const shown = ids.slice(0, PAGE)
-    rememberSelect(this.e.user_id, { ids, kindName, render, tpl, page, pageSize: PAGE })
-    const lines = shown.map((id, i) => label(id, i))
+    // 文本型 selection：预生成每页 id→行文本 映射，翻页(turnPage)也走文本保持一致
+    const textNames = {}
+    for (const id of ids) textNames[id] = label(id, ids.indexOf(id)).replace(/^\d+\.\s*/, '')
+    rememberSelect(this.e.user_id, { ids, kindName, render, tpl, page, pageSize: PAGE, textNames })
+    const lines = shown.map((id, i) => `${i + 1}. ${textNames[id]}`)
     const more = ids.length > PAGE ? `\n…等 ${ids.length} 个 · 回复 下一页/上一页/第N页 翻页，序号查看详情` : ''
     await this.reply(`【${title}】第 ${page + 1}/${totalPages} 页\n` + lines.join('\n') + more)
     return true
@@ -482,7 +485,7 @@ export class LimbusTool extends plugin {
     const q = this._stripKw(this.e.msg, '探索事件|事件').trim()
     const events = readEventData()
     if (!events || !events.length) { await this.reply('探索事件数据未就绪'); return true }
-    if (!q || /^(随机|全部|列表)$/i.test(q)) {
+    if (!q || /^(随机|全部|列表|分组)$/i.test(q)) {
       // 按 stage 分组展示（基础 / 活动卡包 / 主线），便于浏览
       const order = ['基础', '活动卡包', '主线']
       const groups = {}
@@ -524,33 +527,33 @@ export class LimbusTool extends plugin {
   }
 
   /** 单次抽取：按稀有度概率抽一个人格或 EGO */
-  _rollOnce() {
+  _rollOnce(depth = 0) {
     // 概率模型(参考游戏标准抽卡)：人格 3灯1.7%/2灯12%/1灯(含碎片)~71% + EGO WAW0.5%/HE1.5%/TETH6%/ZAYIN(非初始)8%
     // 排除每罪人初始ZAYIN EGO(20X01, 如桑丘之血/森罗炎象, 开局自带不可抽)
     // rarity: 数值越小越稀有（1=3灯人格, 2=WAW, 3=2灯/HE, 4=TETH, 5=1灯/ZAYIN）
     const roll = Math.random() * 100
     if (roll < 1.7) { // 人格 3灯（最稀有）
       const pool = db.personalities.filter(p => (p.rank ?? 0) >= 3)
-      return this._pick(pool, 'personality', 1)
+      return this._pick(pool, 'personality', 1, depth)
     } else if (roll < 13.7) { // 人格 2灯
       const pool = db.personalities.filter(p => (p.rank ?? 0) === 2)
-      return this._pick(pool, 'personality', 3)
+      return this._pick(pool, 'personality', 3, depth)
     } else if (roll < 93) { // 人格碎片（1灯初始人格不可抽，全部为碎片；碎片只分该罪人人格碎片，不出十连券碎片）
       const shardNames = ['李箱', '浮士德', '堂吉诃德', '良秀', '默尔索', '鸿璐', '希斯克利夫', '以实玛利', '罗佳', '辛克莱', '奥提斯', '格里高尔']
       const si = Math.floor(Math.random() * shardNames.length)
       return { kind: 'shard', id: 0, name: `${shardNames[si]}·人格碎片 ×${1 + Math.floor(Math.random() * 15)}`, rank: 0, rarity: 5, shardCharId: si + 1 }
     } else if (roll < 93.3) { // EGO WAW
       const pool = db.egos.filter(g => g.grade === 'WAW')
-      return this._pick(pool, 'ego', 2)
+      return this._pick(pool, 'ego', 2, depth)
     } else if (roll < 94.3) { // EGO HE
       const pool = db.egos.filter(g => g.grade === 'HE')
-      return this._pick(pool, 'ego', 3)
+      return this._pick(pool, 'ego', 3, depth)
     } else if (roll < 97.3) { // EGO TETH
       const pool = db.egos.filter(g => g.grade === 'TETH')
-      return this._pick(pool, 'ego', 4)
+      return this._pick(pool, 'ego', 4, depth)
     } else { // EGO ZAYIN（排除初始）
       const pool = db.egos.filter(g => g.grade === 'ZAYIN' && !this._isInitialEgo(g.id))
-      return this._pick(pool, 'ego', 5)
+      return this._pick(pool, 'ego', 5, depth)
     }
   }
 
@@ -559,8 +562,14 @@ export class LimbusTool extends plugin {
     return /^20\d01$/.test(String(id))
   }
 
-  _pick(pool, kind, rarity) {
-    if (!pool.length) return this._rollOnce()
+  _pick(pool, kind, rarity, depth = 0) {
+    // 空池防御：递归重抽设深度上限，超限返回保底人格碎片，避免极端数据下栈溢出
+    if (!pool.length) {
+      if (depth < 4) return this._rollOnce(depth + 1)
+      const shardNames = ['李箱', '浮士德', '堂吉诃德', '良秀', '默尔索', '鸿璐', '希斯克利夫', '以实玛利', '罗佳', '辛克莱', '奥提斯', '格里高尔']
+      const si = Math.floor(Math.random() * shardNames.length)
+      return { kind: 'shard', id: 0, name: `${shardNames[si]}·人格碎片 ×${1 + Math.floor(Math.random() * 15)}`, rank: 0, rarity: 5, shardCharId: si + 1 }
+    }
     const it = pool[Math.floor(Math.random() * pool.length)]
     const isEgo = kind === 'ego'
     return {
